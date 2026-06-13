@@ -48,7 +48,8 @@ def start_listener():
                     if telemetry is None:
                         print(f"[{timestamp}] Failed to parse car telemetry packet")
                         continue
-
+                    
+                    # Clear the console and display LIVE car telemetry terminal
                     print("\033c", end="")
                     print("====================================")
                     print("DAEDALUS LIVE TELEMETRY")
