@@ -26,7 +26,7 @@ def format_delta(milliseconds):
     seconds = milliseconds / 1000
 
     if seconds > 0:
-        return f"{seconds:.3f}s"
+        return f"+{seconds:.3f}s"
     return f"{seconds:.3f}s"
 
 def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history):
@@ -96,17 +96,17 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
 
     # Current Delta Information  
     delta_s1 = format_delta(
-        best_s1 - current_s1
+        current_s1 - best_s1
         if current_s1 and best_s1
         else None
     )
     delta_s2 = format_delta(
-        best_s2 - current_s2
+        current_s2 - best_s2
         if current_s2 and best_s2
         else None
     )
     delta_s3 = format_delta(
-        best_s3 - current_s3
+        current_s3 - best_s3
         if current_s3 and best_s3
         else None
     ) 
