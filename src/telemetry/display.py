@@ -72,6 +72,6 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
     # Placeholder for current delta from lap data (will decode later)  
     delta_s1 = delta_s2 = delta_s3 = "--"
     print()
-    print(f"Best Sectors: S1: {best_s1} | S2: {best_s2} | S3: {best_s3}")
+    print(f"Best Sectors:    S1: {best_s1}    | S2: {best_s2}    | S3: {best_s3}")
     print(f"Current Sectors: S1: {current_s1} | S2: {current_s2} | S3: {current_s3}")
-    print(f"Delta to Best: S1: {delta_s1} | S2: {delta_s2} | S3: {delta_s3}")
+    print(f"Delta to Best:   S1: {delta_s1}   | S2: {delta_s2}   | S3: {delta_s3}")
