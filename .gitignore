@@ -5,4 +5,4 @@ __pycache__/
 .vscode/
 .DS_Store
 .pytest_cache/
-.codex/
+.codex/ # Ignore Codex configuration files (unaware of Codex's involvement in the project)
