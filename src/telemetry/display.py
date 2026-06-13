@@ -90,7 +90,7 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
     if latest_lap_data is not None:
         current_s1 = latest_lap_data.sector_1_time_ms
         current_s2 = latest_lap_data.sector_2_time_ms
-        current_s3 = latest_lap_data.sector_3_time_ms
+        current_s3 = None  # Not provided in lap data packet, would need to be calculated based on lap time and sector times
     else:
         current_s1 = current_s2 = current_s3 = None
 
@@ -116,10 +116,10 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
     best_s3 = format_time_ms_with_placeholder(best_s3)
 
     current_s1 = format_time_ms_with_placeholder(current_s1)
-    current_s2 = format_sector_time(current_s2)
-    current_s3 = format_sector_time(current_s3)
+    current_s2 = format_time_ms_with_placeholder(current_s2)
+    current_s3 = format_time_ms_with_placeholder(current_s3)
 
     print()
-    print(f"Best Sectors:    S1: {best_s1}    | S2: {best_s2}    | S3: {best_s3}")
+    print(f"Best Sectors:    S1: {best_s1} | S2: {best_s2} | S3: {best_s3}")
     print(f"Current Sectors: S1: {current_s1} | S2: {current_s2} | S3: {current_s3}")
-    print(f"Delta to Best:   S1: {delta_s1}   | S2: {delta_s2}   | S3: {delta_s3}")
+    print(f"Delta to Best:   S1: {delta_s1}  | S2: {delta_s2}  | S3: {delta_s3}")
