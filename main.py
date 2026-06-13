@@ -20,9 +20,9 @@ if __name__ == "__main__":
 # ===============================================
 # Roadmap
 # ===============================================
-#1. Decode live car telemetry -> Packet 6: Car Telemetry (Speed, gear, RPM, throttle, brake, DRS)
-#2. Decode race data -> Packet 2: Lap Data (Position, lap number, sector, current lap time, gap ahead, gap behind)
-#3. Display clean live telemetry (dashboard-style terminal output, not packet spam)
+#1. Decode live car telemetry -> Packet 6: Car Telemetry (Speed, gear, RPM, throttle, brake, DRS) - [Completed]
+#2. Decode race data -> Packet 2: Lap Data (Position, lap number, sector, current lap time, gap ahead, gap behind) - [Completed]
+#3. Display clean live telemetry (dashboard-style terminal output, not packet spam) - [Completed]
 #4. Decode weather/session data -> Packet 5: Weather & Session Data (Weather, track temp, air temp, session type, session duration, etc.)
 #5. Decode tyre/wear/damage data -> Packet 7/10/12 (Tyres, fuel, ERS, damage))
 #6. Build rule-based race engineer
@@ -34,13 +34,13 @@ if __name__ == "__main__":
 
 # ===============================================
 
-#1. Decode live car telemetry
+#1. Decode live car telemetry - [Completed]
 #   -> Packet 6: Car Telemetry (Speed, Gear, RPM, Throttle, Brake, DRS)
 
-#2. Decode race data
+#2. Decode race data - [Completed]
 #   -> Packet 2: Lap Data (Position, Lap Number, Sector, Current Lap Time, Gap Ahead, Gap Behind)
 
-#3. Display clean live telemetry
+#3. Display clean live telemetry - [Completed]
 #   (Dashboard-style terminal output, not packet spam)
 
 #4. Decode vehicle state
