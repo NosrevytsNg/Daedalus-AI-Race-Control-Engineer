@@ -1,8 +1,8 @@
 import socket
 from datetime import datetime
 
-from src.telemetry.parser import parse_header
-from src.telemetry.packets import PACKET_NAMES
+from src.telemetry.parser import parse_header, parse_car_telemetry
+from src.telemetry.packets import PACKET_NAMES, PACKET_ID_CAR_TELEMETRY
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 20777
@@ -40,8 +40,26 @@ def start_listener():
                     f"Format: {header['packet_format']} | "
                     f"Player Car {header['player_car_index']} | "
                     f"Size: {len(data)} bytes"
-                    #f"{address[0]}:{address[1]} | Size: {len(data)} bytes"
-                )
+                    f"{address[0]}:{address[1]} | Size: {len(data)} bytes")
+
+                if packet_id == PACKET_ID_CAR_TELEMETRY:
+                    telemetry = parse_car_telemetry(data, header["player_car_index"])
+
+                    if telemetry is None:
+                        print(f"[{timestamp}] Failed to parse car telemetry packet")
+                        continue
+
+                    print("\033c", end="")
+                    print("====================================")
+                    print("DAEDALUS LIVE TELEMETRY")
+                    print("====================================")
+                    print()
+                    print(f"Speed:     {telemetry.speed} km/h")
+                    print(f"Gear:      {telemetry.gear}")
+                    print(f"RPM:       {telemetry.rpm}")
+                    print(f"Throttle:  {telemetry.throttle * 100:.0f}%")
+                    print(f"Brake:     {telemetry.brake * 100:.0f}%")
+                    print(f"DRS:       {'ON' if telemetry.drs else 'OFF'}")
             except socket.timeout:
                 continue
     except KeyboardInterrupt:

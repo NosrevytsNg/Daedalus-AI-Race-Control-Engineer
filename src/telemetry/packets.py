@@ -16,3 +16,6 @@ PACKET_NAMES = {
     14: "Time Trial",
     15: "Lap Positions",
 }
+
+PACKET_ID_CAR_TELEMETRY = 6
+MAX_CARS = 22
