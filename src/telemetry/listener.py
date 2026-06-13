@@ -86,8 +86,8 @@ def start_listener():
                 # ============================================================
 
                 # Replaced with:               
-                display_live_telemetry(latest_telemetry, latest_lap_data)
-                
+                # display_live_telemetry(latest_telemetry, latest_lap_data)
+
                 current_time = time.time()
 
                 if current_time - last_display_update >= DISPLAY_REFRESH_RATE:
