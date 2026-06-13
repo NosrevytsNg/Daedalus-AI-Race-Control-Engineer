@@ -3,8 +3,8 @@ import time
 from datetime import datetime
 from src.telemetry.display import display_live_telemetry
 
-from src.telemetry.parser import parse_header, parse_car_telemetry, parse_lap_data, format_time_ms
-from src.telemetry.packets import PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET_ID_LAP_DATA
+from src.telemetry.parser import parse_header, parse_car_telemetry, parse_lap_data, parse_session_history
+from src.telemetry.packets import PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET_ID_LAP_DATA, PACKET_ID_SESSION_HISTORY
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 20777
@@ -22,6 +22,7 @@ def start_listener():
 
     latest_telemetry = None
     latest_lap_data = None
+    latest_session_history = None  
 
     last_display_update = 0
     DISPLAY_REFRESH_RATE = 0.25  # seconds
@@ -57,6 +58,12 @@ def start_listener():
 
                 elif packet_id == PACKET_ID_LAP_DATA:
                     latest_lap_data = parse_lap_data(data, header["player_car_index"])
+    
+                elif packet_id == PACKET_ID_SESSION_HISTORY:
+                    session_history = parse_session_history(data, header["player_car_index"])
+
+                    if session_history is not None:
+                        latest_session_history = session_history
 
                 # ============================================================
                 # Clear the console and display LIVE car telemetry terminal
@@ -86,12 +93,12 @@ def start_listener():
                 # ============================================================
 
                 # Replaced with:               
-                # display_live_telemetry(latest_telemetry, latest_lap_data)
+                # display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history)
 
                 current_time = time.time()
 
                 if current_time - last_display_update >= DISPLAY_REFRESH_RATE:
-                    display_live_telemetry(latest_telemetry, latest_lap_data)
+                    display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history)
                     last_display_update = current_time
 
             except socket.timeout:

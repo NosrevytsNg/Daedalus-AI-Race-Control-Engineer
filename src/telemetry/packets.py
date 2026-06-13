@@ -19,4 +19,5 @@ PACKET_NAMES = {
 
 PACKET_ID_LAP_DATA = 2 # [2: "Lap Data"]
 PACKET_ID_CAR_TELEMETRY = 6 # [6: "Car Telemetry"]
+PACKET_ID_SESSION_HISTORY = 11  # [11: "Session History"]
 MAX_CARS = 22

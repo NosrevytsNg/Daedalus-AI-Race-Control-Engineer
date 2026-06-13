@@ -77,10 +77,6 @@ def format_time_ms(milliseconds):
     return f"{minutes}:{seconds:06.3f}"
 
 
-
-
-
-
 # ================================================================
 # Car Telemetry Packet (Packet ID 6)
 
@@ -113,4 +109,93 @@ def parse_car_telemetry(data, player_car_index):
         gear=values[5],
         rpm=values[6],
         drs=bool(values[7]),
+    )
+
+# ================================================================
+# Session History Packet (Packet ID 11)
+
+@dataclass
+class SessionHistory:
+    best_lap_num: int
+    best_lap_time_ms: int
+    best_sector1_time_ms: int
+    best_sector2_time_ms: int
+    best_sector3_time_ms: int
+
+SESSION_HISTORY_HEADER_FORMAT = "<BBBBBBB"
+SESSION_HISTORY_HEADER_SIZE = struct.calcsize(SESSION_HISTORY_HEADER_FORMAT)
+
+LAP_HISTORY_FORMAT = "<IHBHBHBB"
+LAP_HISTORY_SIZE = struct.calcsize(LAP_HISTORY_FORMAT)
+
+def combine_session_time(milliseconds, minutes):
+    return (minutes * 60000) + milliseconds
+
+def parse_session_history(data, player_car_index):
+    session_history_start = HEADER_SIZE
+
+    if len(data) < session_history_start + SESSION_HISTORY_HEADER_SIZE:
+        return None
+    
+    values = struct.unpack_from(
+        SESSION_HISTORY_HEADER_FORMAT, data, session_history_start)
+    
+    car_idx = values[0]
+    num_laps = values[1]
+    best_lap_time_lap_num = values[3]
+    best_sector_1_lap_num = values[4]
+    best_sector_2_lap_num = values[5]   
+    best_sector_3_lap_num = values[6]
+
+    if car_idx != player_car_index:
+        return None
+    
+    lap_history_start = session_history_start + SESSION_HISTORY_HEADER_SIZE
+
+    def get_lap_history(lap_num):
+        if lap_num == 0 or lap_num > num_laps:
+            return None
+        
+        lap_index = lap_num - 1
+
+        if lap_index >= num_laps:
+            return None
+        
+        lap_offset = lap_history_start + (lap_index * LAP_HISTORY_SIZE)
+
+        if len(data) < lap_offset + LAP_HISTORY_SIZE:
+            return None
+        
+        return struct.unpack_from(LAP_HISTORY_FORMAT, data, lap_offset)
+        
+    best_lap = get_lap_history(best_lap_time_lap_num)
+    best_sector_1_lap = get_lap_history(best_sector_1_lap_num)
+    best_sector_2_lap = get_lap_history(best_sector_2_lap_num)
+    best_sector_3_lap = get_lap_history(best_sector_3_lap_num)
+
+    if best_lap is None:
+        return None
+    
+    best_sector_1_ms = 0
+    best_sector_2_ms = 0
+    best_sector_3_ms = 0
+
+    if best_sector_1_lap is not None:
+        best_sector_1_ms = combine_session_time(
+            best_sector_1_lap[1], best_sector_1_lap[2])
+        
+    if best_sector_2_lap is not None:
+        best_sector_2_ms = combine_session_time(
+            best_sector_2_lap[3], best_sector_2_lap[4])
+        
+    if best_sector_3_lap is not None:
+        best_sector_3_ms = combine_session_time(
+            best_sector_3_lap[5], best_sector_3_lap[6])
+        
+    return SessionHistory(
+        best_lap_num=best_lap_time_lap_num,
+        best_lap_time_ms=best_lap[0],
+        best_sector1_time_ms=best_sector_1_ms,
+        best_sector2_time_ms=best_sector_2_ms,
+        best_sector3_time_ms=best_sector_3_ms,
     )
