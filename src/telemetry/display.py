@@ -119,7 +119,16 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
     current_s2 = format_time_ms_with_placeholder(current_s2)
     current_s3 = format_time_ms_with_placeholder(current_s3)
 
+    # Phase 1: Display sector times and deltas
+    #print()
+    #print(f"Best Sectors:    S1: {best_s1} | S2: {best_s2} | S3: {best_s3}")
+    #print(f"Current Sectors: S1: {current_s1} | S2: {current_s2} | S3: {current_s3}")
+    #print(f"Delta to Best:   S1: {delta_s1}  | S2: {delta_s2}  | S3: {delta_s3}")
+
+    # Phase 2: Edit sector times and deltas format (table format with headers)
     print()
-    print(f"Best Sectors:    S1: {best_s1} | S2: {best_s2} | S3: {best_s3}")
-    print(f"Current Sectors: S1: {current_s1} | S2: {current_s2} | S3: {current_s3}")
-    print(f"Delta to Best:   S1: {delta_s1}  | S2: {delta_s2}  | S3: {delta_s3}")
+    print("                     S1         S2         S3")
+    print("----------------------------------------------------")
+    print(f"Best Sector       {best_s1:<10} {best_s2:<10} {best_s3:<10}")
+    print(f"Current Sector    {current_s1:<10} {current_s2:<10} {current_s3:<10}")
+    print(f"Delta             {delta_s1:<10} {delta_s2:<10} {delta_s3:<10}")    
