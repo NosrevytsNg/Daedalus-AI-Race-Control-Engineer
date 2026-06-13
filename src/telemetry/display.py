@@ -10,10 +10,10 @@ def display_live_telemetry(latest_telemetry, latest_lap_data):
     clear_terminal()
 
     # Display telemetry terminal
-    print("====================================")
-    print("DAEDALUS LIVE TELEMETRY")
-    print("====================================")
-    print()
+    #print("====================================")
+    #print("DAEDALUS LIVE TELEMETRY")
+    #print("====================================")
+    #print()
 
     # LIVE car telemetry data 
     if latest_telemetry is not None:
