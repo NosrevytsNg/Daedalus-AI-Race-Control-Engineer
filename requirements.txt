@@ -1,1 +1,10 @@
 python-dotenv
+
+# F1 Requirements:
+#
+#
+#
+#
+#
+#
+#
