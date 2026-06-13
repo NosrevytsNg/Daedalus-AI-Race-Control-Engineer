@@ -12,6 +12,23 @@ def format_time_ms_with_placeholder(milliseconds):
         return "--"        #"--:--.---"  
     return format_time_ms(milliseconds)
 
+def format_sector_time(milliseconds):
+    if milliseconds is None or milliseconds <= 0:
+        return "--"        #"--:--.---" 
+    
+    seconds = milliseconds / 1000
+    return f"{seconds:.3f}"
+
+def format_delta(milliseconds):
+    if milliseconds is None:
+        return "--"        #"--:--.---"  
+
+    seconds = milliseconds / 1000
+
+    if seconds > 0:
+        return f"{seconds:.3f}s"
+    return f"{seconds:.3f}s"
+
 def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history):
     clear_terminal()
 
@@ -59,18 +76,49 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
         print("No lap data available yet.")
 
     # LIVE session history data (sector records)
-    if latest_session_history is not None:    
-        best_s1 = format_time_ms_with_placeholder(latest_session_history.best_sector1_time_ms)
-        best_s2 = format_time_ms_with_placeholder(latest_session_history.best_sector2_time_ms)
-        best_s3 = format_time_ms_with_placeholder(latest_session_history.best_sector3_time_ms)
+    
+    if latest_session_history is not None: 
+
+        # Best Sector Timings
+        best_s1 = latest_session_history.best_sector1_time_ms
+        best_s2 = latest_session_history.best_sector2_time_ms
+        best_s3 = latest_session_history.best_sector3_time_ms
     else:
-        best_s1 = best_s2 = best_s3 = "--"
+        best_s1 = best_s2 = best_s3 = None
 
-    # Placeholder for current sector times from lap data (will decode later)
-    current_s1 = current_s2 = current_s3 = "--"
+    # Current Sector Timings
+    if latest_lap_data is not None:
+        current_s1 = latest_lap_data.sector_1_time_ms
+        current_s2 = latest_lap_data.sector_2_time_ms
+        current_s3 = latest_lap_data.sector_3_time_ms
+    else:
+        current_s1 = current_s2 = current_s3 = None
 
-    # Placeholder for current delta from lap data (will decode later)  
-    delta_s1 = delta_s2 = delta_s3 = "--"
+    # Current Delta Information  
+    delta_s1 = format_delta(
+        best_s1 - current_s1
+        if current_s1 and best_s1
+        else None
+    )
+    delta_s2 = format_delta(
+        best_s2 - current_s2
+        if current_s2 and best_s2
+        else None
+    )
+    delta_s3 = format_delta(
+        best_s3 - current_s3
+        if current_s3 and best_s3
+        else None
+    ) 
+
+    best_s1 = format_time_ms_with_placeholder(best_s1)
+    best_s2 = format_time_ms_with_placeholder(best_s2)
+    best_s3 = format_time_ms_with_placeholder(best_s3)
+
+    current_s1 = format_time_ms_with_placeholder(current_s1)
+    current_s2 = format_sector_time(current_s2)
+    current_s3 = format_sector_time(current_s3)
+
     print()
     print(f"Best Sectors:    S1: {best_s1}    | S2: {best_s2}    | S3: {best_s3}")
     print(f"Current Sectors: S1: {current_s1} | S2: {current_s2} | S3: {current_s3}")

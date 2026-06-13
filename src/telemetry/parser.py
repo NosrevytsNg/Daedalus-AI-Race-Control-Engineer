@@ -38,6 +38,8 @@ class LapData:
     sector: int
     delta_to_car_in_front_ms: int
     delta_to_race_leader_ms: int
+    sector_1_time_ms: int 
+    sector_2_time_ms: int
 
 
 LAP_DATA_FORMAT = "<IIHBHBHBHfffBBBBBBBBBBHBBHBB"
@@ -64,6 +66,8 @@ def parse_lap_data(data, player_car_index):
         sector=values[18],
         delta_to_car_in_front_ms=delta_to_car_in_front_ms,
         delta_to_race_leader_ms=delta_to_race_leader_ms,
+        sector_1_time_ms=(values[2]),
+        sector_2_time_ms=(values[3]),
     )
 
 
@@ -120,7 +124,6 @@ class SessionHistory:
     best_lap_time_ms: int
     best_sector1_time_ms: int
     best_sector2_time_ms: int
-    best_sector3_time_ms: int
 
 SESSION_HISTORY_HEADER_FORMAT = "<BBBBBBB"
 SESSION_HISTORY_HEADER_SIZE = struct.calcsize(SESSION_HISTORY_HEADER_FORMAT)
