@@ -17,5 +17,6 @@ PACKET_NAMES = {
     15: "Lap Positions",
 }
 
-PACKET_ID_CAR_TELEMETRY = 6
+PACKET_ID_LAP_DATA = 2 # [2: "Lap Data"]
+PACKET_ID_CAR_TELEMETRY = 6 # [6: "Car Telemetry"]
 MAX_CARS = 22

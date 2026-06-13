@@ -1,4 +1,5 @@
 import struct
+from dataclasses import dataclass
 
 HEADER_FORMAT = "<HBBBBBQfIIBB"
 HEADER_SIZE = struct.calcsize(HEADER_FORMAT)
@@ -25,8 +26,63 @@ def parse_header(data):
         "secondary_player_car_index": values[11],
     }
 
-from dataclasses import dataclass
+# ================================================================
+# Lap Data Packet (Packet ID 2)
 
+@dataclass
+class LapData:
+    last_lap_time_ms: int
+    current_lap_time_ms: int
+    car_position: int
+    current_lap_num: int
+    sector: int
+    delta_to_car_in_front_ms: int
+    delta_to_race_leader_ms: int
+
+
+LAP_DATA_FORMAT = "<IIHBHBHBHfffBBBBBBBBBBHBBHBB"
+LAP_DATA_SIZE = struct.calcsize(LAP_DATA_FORMAT)
+
+
+def parse_lap_data(data, player_car_index):
+    lap_data_start = HEADER_SIZE
+    car_offset = lap_data_start + (player_car_index * LAP_DATA_SIZE)
+
+    if len(data) < car_offset + LAP_DATA_SIZE:
+        return None
+
+    values = struct.unpack_from(LAP_DATA_FORMAT, data, car_offset)
+
+    delta_to_car_in_front_ms = (values[7] * 60000) + values[6]
+    delta_to_race_leader_ms = (values[9] * 60000) + values[8]
+
+    return LapData(
+        last_lap_time_ms=values[0],
+        current_lap_time_ms=values[1],
+        car_position=values[13],
+        current_lap_num=values[14],
+        sector=values[18],
+        delta_to_car_in_front_ms=delta_to_car_in_front_ms,
+        delta_to_race_leader_ms=delta_to_race_leader_ms,
+    )
+
+
+def format_time_ms(milliseconds):
+    if milliseconds <= 0:
+        return "--"
+
+    minutes = milliseconds // 60000
+    seconds = (milliseconds % 60000) / 1000
+
+    return f"{minutes}:{seconds:06.3f}"
+
+
+
+
+
+
+# ================================================================
+# Car Telemetry Packet (Packet ID 6)
 
 CAR_TELEMETRY_FORMAT = "<HfffBbHBBH4H4B4BH4f4B"
 CAR_TELEMETRY_SIZE = struct.calcsize(CAR_TELEMETRY_FORMAT)
