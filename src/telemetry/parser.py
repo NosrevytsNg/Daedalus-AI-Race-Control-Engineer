@@ -117,6 +117,7 @@ def parse_car_telemetry(data, player_car_index):
 
 # ================================================================
 # Session History Packet (Packet ID 11)
+# Used for Best Lap and Sector Times in the current session.
 
 @dataclass
 class SessionHistory:
@@ -203,3 +204,10 @@ def parse_session_history(data, player_car_index):
         best_sector2_time_ms=best_sector_2_ms,
         best_sector3_time_ms=best_sector_3_ms,
     )
+
+@dataclass
+class CompletedLapSectorTiming:
+    lap_num: int
+    sector_1_time_ms: int
+    sector_2_time_ms: int
+    sector_3_time_ms: int

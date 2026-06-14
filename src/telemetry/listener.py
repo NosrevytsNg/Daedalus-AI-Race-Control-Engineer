@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 from src.telemetry.display import display_live_telemetry
 
-from src.telemetry.parser import parse_header, parse_car_telemetry, parse_lap_data, parse_session_history
+from src.telemetry.parser import parse_header, parse_car_telemetry, parse_lap_data, parse_session_history, CompletedLapSectorTiming
 from src.telemetry.packets import PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET_ID_LAP_DATA, PACKET_ID_SESSION_HISTORY
 
 UDP_IP = "0.0.0.0"
@@ -20,9 +20,16 @@ def start_listener():
     sock.bind((UDP_IP, UDP_PORT))
     sock.settimeout(1.0)
 
+    # Telemetry Data (Packet ID 6) - Speed, Gear, RPM, Throttle, Brake, DRS
     latest_telemetry = None
+
+    # Lap Data (Packet ID 2) - Lap Details (Position, Lap Number, Gap Ahead, Gap Behind)
     latest_lap_data = None
-    latest_session_history = None  
+
+    # Session History (Packet ID 11) - Lap and Sector Times (Current, Best, Previous)
+    latest_session_history = None 
+    previous_lap_num = 0
+    latest_completed_lap_sectors = None  # To store sector times for the most recently completed lap 
 
     last_display_update = 0
     DISPLAY_REFRESH_RATE = 0.25  # seconds
@@ -57,7 +64,32 @@ def start_listener():
                     latest_telemetry = parse_car_telemetry(data, header["player_car_index"])
 
                 elif packet_id == PACKET_ID_LAP_DATA:
-                    latest_lap_data = parse_lap_data(data, header["player_car_index"])
+                    new_lap_data = parse_lap_data(data, header["player_car_index"])
+
+                    # Added for previous sector timing records
+                    if new_lap_data is not None:
+                        if(
+                            previous_lap_num is not None
+                            and new_lap_data.current_lap_num > previous_lap_num
+                            and latest_lap_data is not None
+                        ):
+                            sector_1 = latest_lap_data.sector_1_time_ms
+                            sector_2 = latest_lap_data.sector_2_time_ms
+                            sector_3 = latest_lap_data.current_lap_time_ms - sector_1 - sector_2
+
+                            if sector_1 > 0 and sector_2 > 0 and sector_3 > 0:
+                                latest_completed_lap_sectors = CompletedLapSectorTiming(
+                                    lap_num=latest_lap_data.current_lap_num - 1,
+                                    sector_1_time_ms=sector_1,
+                                    sector_2_time_ms=sector_2,
+                                    sector_3_time_ms=sector_3,
+                                )
+
+                        previous_lap_num = new_lap_data.current_lap_num
+                        latest_lap_data = new_lap_data   
+                        
+                        
+                    #print(f"Completed Lap {latest_completed_lap_sectors.lap_num} Sector Times: S1={format_time_ms(sector_1)}, S2={format_time_ms(sector_2)}, S3={format_time_ms(sector_3)}")
     
                 elif packet_id == PACKET_ID_SESSION_HISTORY:
                     session_history = parse_session_history(data, header["player_car_index"])
@@ -98,7 +130,7 @@ def start_listener():
                 current_time = time.time()
 
                 if current_time - last_display_update >= DISPLAY_REFRESH_RATE:
-                    display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history)
+                    display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history, latest_completed_lap_sectors)
                     last_display_update = current_time
 
             except socket.timeout:

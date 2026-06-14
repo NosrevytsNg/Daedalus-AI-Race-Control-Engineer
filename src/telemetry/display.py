@@ -29,7 +29,7 @@ def format_delta(milliseconds):
         return f"+{seconds:.3f}s"
     return f"{seconds:.3f}s"
 
-def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history):
+def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history, latest_completed_lap_sectors,):
     clear_terminal()
 
     # Display telemetry terminal
@@ -94,6 +94,19 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
     else:
         current_s1 = current_s2 = current_s3 = None
 
+    if latest_completed_lap_sectors is not None:
+        previous_s1 = format_time_ms_with_placeholder(
+            latest_completed_lap_sectors.sector_1_time_ms
+        )
+        previous_s2 = format_time_ms_with_placeholder(
+            latest_completed_lap_sectors.sector_2_time_ms
+        )
+        previous_s3 = format_time_ms_with_placeholder(
+            latest_completed_lap_sectors.sector_3_time_ms
+        )
+    else:
+        previous_s1 = previous_s2 = previous_s3 = "--"
+
     # Current Delta Information  
     delta_s1 = format_delta(
         current_s1 - best_s1
@@ -131,4 +144,5 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
     print("----------------------------------------------------")
     print(f"Best Sector       {best_s1:<10} {best_s2:<10} {best_s3:<10}")
     print(f"Current Sector    {current_s1:<10} {current_s2:<10} {current_s3:<10}")
+    print(f"Previous Sector   {previous_s1:<10} {previous_s2:<10} {previous_s3:<10}")
     print(f"Delta             {delta_s1:<10} {delta_s2:<10} {delta_s3:<10}")    
