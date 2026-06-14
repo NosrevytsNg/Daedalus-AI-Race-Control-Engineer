@@ -230,11 +230,10 @@ class CarStatus:
     ers_deploy_mode: int
     pit_limiter_status: bool 
 
-CAR_STATUS_FORMAT = "<BBBBBfffHHBBHBBBbffBfffB"
+CAR_STATUS_FORMAT = "<BBBBBfffHHBBHBBBbfffBfffB" #"<BBBBBfffHHBBHBBBbffBfffB"
 CAR_STATUS_SIZE = struct.calcsize(CAR_STATUS_FORMAT)
 
 ERS_MAX_ENERGY = 4_000_000
-
 
 def parse_car_status(data, player_car_index):
     car_status_start = HEADER_SIZE
@@ -249,12 +248,12 @@ def parse_car_status(data, player_car_index):
         fuel_in_tank=values[5],
         fuel_capacity=values[6],
         fuel_remaining_laps=values[7],
+        pit_limiter_status=bool(values[4]),
         drs_allowed=bool(values[11]),
         drs_activation_distance=values[12],
         actual_tyre_compound=values[13],
         visual_tyre_compound=values[14],
         tyres_age_laps=values[15],
-        pit_limiter_status=bool(values[4]),
         ers_store_energy=values[20],
         ers_deploy_mode=values[21],
     )
