@@ -57,6 +57,10 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
         print()
         print(f"Position:  {latest_lap_data.car_position}")
         print(f"Lap:       {latest_lap_data.current_lap_num}")
+        print()
+        print(f"Gap Ahead: {latest_lap_data.delta_to_car_in_front_ms / 1000:.3f}s")
+        print(f"Gap Leader: {latest_lap_data.delta_to_race_leader_ms / 1000:.3f}s")
+
         
         if latest_session_history is not None:
             print()
@@ -67,9 +71,6 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
         print(f"Current Lap :  {format_time_ms(latest_lap_data.current_lap_time_ms)}")
         print(f"Last Lap:  {format_time_ms(latest_lap_data.last_lap_time_ms)}")
 
-        print()
-        print(f"Gap Ahead: {latest_lap_data.delta_to_car_in_front_ms / 1000:.3f}s")
-        print(f"Gap Leader: {latest_lap_data.delta_to_race_leader_ms / 1000:.3f}s")
 
     else:
         print()
