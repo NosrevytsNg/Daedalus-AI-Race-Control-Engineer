@@ -254,6 +254,6 @@ def parse_car_status(data, player_car_index):
         actual_tyre_compound=values[13],
         visual_tyre_compound=values[14],
         tyres_age_laps=values[15],
-        ers_store_energy=values[20],
-        ers_deploy_mode=values[21],
+        ers_store_energy=values[19],
+        ers_deploy_mode=values[20],
     )
