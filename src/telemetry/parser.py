@@ -41,8 +41,8 @@ class LapData:
     sector_1_time_ms: int 
     sector_2_time_ms: int
 
-
-LAP_DATA_FORMAT = "<IIHBHBHBHfffBBBBBBBBBBHBBHBB"
+# Change LAP_DATA_FORMAT = "<IIHBHBHBHfffBBBBBBBBBBHBBHBB" -> "<IIHBHBHBHBfffBBBBBBBBBBBBBBBHHBfB"
+LAP_DATA_FORMAT = "<IIHBHBHBHBfffBBBBBBBBBBBBBBBHHBfB"
 LAP_DATA_SIZE = struct.calcsize(LAP_DATA_FORMAT)
 
 
@@ -63,11 +63,11 @@ def parse_lap_data(data, player_car_index):
         current_lap_time_ms=values[1],
         car_position=values[13],
         current_lap_num=values[14],
-        sector=values[18],
+        sector=values[17],
         delta_to_car_in_front_ms=delta_to_car_in_front_ms,
         delta_to_race_leader_ms=delta_to_race_leader_ms,
-        sector_1_time_ms=(values[2]),
-        sector_2_time_ms=(values[4]),
+        sector_1_time_ms=(values[3] * 60000) + (values[2]),
+        sector_2_time_ms=(values[5] * 60000) + (values[4]),
     )
 
 
