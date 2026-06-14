@@ -12,6 +12,7 @@ def format_time_ms_with_placeholder(milliseconds):
         return "--"        #"--:--.---"  
     return format_time_ms(milliseconds)
 
+# Format sector and delta timing display
 def format_sector_time(milliseconds):
     if milliseconds is None or milliseconds <= 0:
         return "--"        #"--:--.---" 
@@ -19,6 +20,7 @@ def format_sector_time(milliseconds):
     seconds = milliseconds / 1000
     return f"{seconds:.3f}"
 
+# Format delta times with + for positive and - for negative
 def format_delta(milliseconds):
     if milliseconds is None:
         return "--"        #"--:--.---"  
@@ -27,6 +29,18 @@ def format_delta(milliseconds):
 
     if seconds > 0:
         return f"+{seconds:.3f}s"
+    return f"{seconds:.3f}s"
+
+# For gap display
+def format_gap_ms(milliseconds):
+    if milliseconds is None or milliseconds < 0:
+        return "--"
+    
+    seconds = milliseconds / 1000
+
+    if seconds < 0 or seconds > 600:
+        return "--"
+
     return f"{seconds:.3f}s"
 
 def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history, latest_completed_lap_sectors,):
@@ -57,10 +71,9 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
         print()
         print(f"Position:  {latest_lap_data.car_position}")
         print(f"Lap:       {latest_lap_data.current_lap_num}")
-        print()
-        print(f"Gap Ahead: {latest_lap_data.delta_to_car_in_front_ms / 1000:.3f}s")
-        print(f"Gap Leader: {latest_lap_data.delta_to_race_leader_ms / 1000:.3f}s")
-
+        #print()
+        print(f"Gap Ahead: {format_gap_ms(latest_lap_data.delta_to_car_in_front_ms)}s")
+        print(f"Gap Leader: {format_gap_ms(latest_lap_data.delta_to_race_leader_ms)}s")
         
         if latest_session_history is not None:
             print()
