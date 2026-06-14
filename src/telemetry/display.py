@@ -43,7 +43,38 @@ def format_gap_ms(milliseconds):
 
     return f"{seconds:.3f}s"
 
-def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history, latest_completed_lap_sectors,):
+# Assign type compound with key
+def format_tyre_compound(compound):
+    compounds = {
+        16: "Soft",
+        17: "Medium",
+        18: "Hard",
+        7: "Intermediate",
+        8: "Wet",
+    }
+
+    return compounds.get(compound, f"Unknown ({compound})")
+
+# Assign ERS mode with key
+def format_ers_mode(mode):
+    modes = {
+        0: "None",
+        1: "Medium",
+        2: "Hotlap",
+        3: "Overtake",
+    }
+
+    return modes.get(mode, f"Unknown ({mode})")
+
+# Assign function for ERS storage energy level
+def format_ers_percentage(ers_store_energy):
+    if ers_store_energy is None:
+        return "--"
+
+    ers_percentage = (ers_store_energy / 4_000_000) * 100
+    return f"{ers_percentage:.0f}%"
+
+def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history, latest_completed_lap_sectors,latest_car_status):
     clear_terminal()
 
     # Display telemetry terminal
@@ -65,6 +96,8 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
     else:
         print()
         print("No telemetry data available yet.")
+
+    #========================================================================================
 
     # LIVE lap data
     if latest_lap_data is not None:
@@ -88,6 +121,8 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
     else:
         print()
         print("No lap data available yet.")
+
+    #========================================================================================
 
     # LIVE session history data (sector records)
     
@@ -146,6 +181,8 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
     current_s2 = format_time_ms_with_placeholder(current_s2)
     current_s3 = format_time_ms_with_placeholder(current_s3)
 
+    #========================================================================================
+
     # Phase 1: Display sector times and deltas
     #print()
     #print(f"Best Sectors:    S1: {best_s1} | S2: {best_s2} | S3: {best_s3}")
@@ -160,3 +197,29 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
     print(f"Current Sector    {current_s1:<10} {current_s2:<10} {current_s3:<10}")
     print(f"Previous Sector   {previous_s1:<10} {previous_s2:<10} {previous_s3:<10}")
     print(f"Delta             {delta_s1:<10} {delta_s2:<10} {delta_s3:<10}")    
+
+    #========================================================================================
+    
+    print()
+    print("----------------------------------------------------")
+    print("CAR STATUS")
+    print("----------------------------------------------------")
+
+    if latest_car_status is not None:
+        print(f"Fuel:        {latest_car_status.fuel_remaining_laps:+.2f} laps")
+        print(f"Fuel Tank:   {latest_car_status.fuel_in_tank:.2f} kg")
+        print(f"ERS:         {format_ers_percentage(latest_car_status.ers_store_energy)}")
+        print(f"ERS Mode:    {format_ers_mode(latest_car_status.ers_deploy_mode)}")
+        print(f"Tyres:       {format_tyre_compound(latest_car_status.visual_tyre_compound)}")
+        print(f"Tyre Age:    {latest_car_status.tyres_age_laps} laps")
+        print(f"DRS Allowed: {'Yes' if latest_car_status.drs_allowed else 'No'}")
+        print(f"Pit Limiter: {'On' if latest_car_status.pit_limiter_status else 'Off'}")
+    else:   
+        print("Fuel:        --")
+        print("Fuel Tank:   --")
+        print("ERS:         --")
+        print("ERS Mode:    --")
+        print("Tyres:       --")
+        print("Tyre Age:    --")
+        print("DRS Allowed: --")
+        print("Pit Limiter: --")

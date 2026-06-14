@@ -27,6 +27,40 @@ def parse_header(data):
     }
 
 # ================================================================
+# Car Telemetry Packet (Packet ID 6)
+
+CAR_TELEMETRY_FORMAT = "<HfffBbHBBH4H4B4BH4f4B"
+CAR_TELEMETRY_SIZE = struct.calcsize(CAR_TELEMETRY_FORMAT)
+
+@dataclass
+class CarTelemetry:
+    speed: int
+    throttle: float
+    brake: float
+    gear: int
+    rpm: int
+    drs: bool
+
+
+def parse_car_telemetry(data, player_car_index):
+    telemetry_start = HEADER_SIZE
+    car_offset = telemetry_start + (player_car_index * CAR_TELEMETRY_SIZE)
+
+    if len(data) < car_offset + CAR_TELEMETRY_SIZE:
+        return None
+
+    values = struct.unpack_from(CAR_TELEMETRY_FORMAT, data, car_offset)
+
+    return CarTelemetry(
+        speed=values[0],
+        throttle=values[1],
+        brake=values[3],
+        gear=values[5],
+        rpm=values[6],
+        drs=bool(values[7]),
+    )
+
+# ================================================================
 # Lap Data Packet (Packet ID 2)
 
 @dataclass
@@ -82,42 +116,9 @@ def format_time_ms(milliseconds):
 
 
 # ================================================================
-# Car Telemetry Packet (Packet ID 6)
-
-CAR_TELEMETRY_FORMAT = "<HfffBbHBBH4H4B4BH4f4B"
-CAR_TELEMETRY_SIZE = struct.calcsize(CAR_TELEMETRY_FORMAT)
-
-@dataclass
-class CarTelemetry:
-    speed: int
-    throttle: float
-    brake: float
-    gear: int
-    rpm: int
-    drs: bool
-
-
-def parse_car_telemetry(data, player_car_index):
-    telemetry_start = HEADER_SIZE
-    car_offset = telemetry_start + (player_car_index * CAR_TELEMETRY_SIZE)
-
-    if len(data) < car_offset + CAR_TELEMETRY_SIZE:
-        return None
-
-    values = struct.unpack_from(CAR_TELEMETRY_FORMAT, data, car_offset)
-
-    return CarTelemetry(
-        speed=values[0],
-        throttle=values[1],
-        brake=values[3],
-        gear=values[5],
-        rpm=values[6],
-        drs=bool(values[7]),
-    )
-
-# ================================================================
 # Session History Packet (Packet ID 11)
 # Used for Best Lap and Sector Times in the current session.
+# class [SessionHistory] & class [CompletedLapSectorTiming]
 
 @dataclass
 class SessionHistory:
@@ -211,3 +212,49 @@ class CompletedLapSectorTiming:
     sector_1_time_ms: int
     sector_2_time_ms: int
     sector_3_time_ms: int
+
+# ================================================================
+# Car Status Packet (Packet ID 7)
+# For vehicle condition and equipment info   
+@dataclass
+class CarStatus:
+    fuel_in_tank: float
+    fuel_capacity: float
+    fuel_remaining_laps: float
+    drs_allowed: bool
+    drs_activation_distance: int
+    actual_tyre_compound: int
+    visual_tyre_compound: int
+    tyres_age_laps: int
+    ers_store_energy: float
+    ers_deploy_mode: int
+    pit_limiter_status: bool 
+
+CAR_STATUS_FORMAT = "<BBBBBfffHHBBHBBBbffBfffB"
+CAR_STATUS_SIZE = struct.calcsize(CAR_STATUS_FORMAT)
+
+ERS_MAX_ENERGY = 4_000_000
+
+
+def parse_car_status(data, player_car_index):
+    car_status_start = HEADER_SIZE
+    car_offset = car_status_start + (player_car_index * CAR_STATUS_SIZE)
+
+    if len(data) < car_offset + CAR_STATUS_SIZE:
+        return None
+
+    values = struct.unpack_from(CAR_STATUS_FORMAT, data, car_offset)
+
+    return CarStatus(
+        fuel_in_tank=values[5],
+        fuel_capacity=values[6],
+        fuel_remaining_laps=values[7],
+        drs_allowed=bool(values[11]),
+        drs_activation_distance=values[12],
+        actual_tyre_compound=values[13],
+        visual_tyre_compound=values[14],
+        tyres_age_laps=values[15],
+        pit_limiter_status=bool(values[4]),
+        ers_store_energy=values[20],
+        ers_deploy_mode=values[21],
+    )

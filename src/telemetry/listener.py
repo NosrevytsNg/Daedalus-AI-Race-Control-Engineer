@@ -3,8 +3,8 @@ import time
 from datetime import datetime
 from src.telemetry.display import display_live_telemetry
 
-from src.telemetry.parser import parse_header, parse_car_telemetry, parse_lap_data, parse_session_history, CompletedLapSectorTiming
-from src.telemetry.packets import PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET_ID_LAP_DATA, PACKET_ID_SESSION_HISTORY
+from src.telemetry.parser import parse_header, parse_car_telemetry, parse_lap_data, parse_session_history, parse_car_status, CompletedLapSectorTiming
+from src.telemetry.packets import PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET_ID_LAP_DATA, PACKET_ID_SESSION_HISTORY, PACKET_ID_CAR_STATUS
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 20777
@@ -20,6 +20,8 @@ def start_listener():
     sock.bind((UDP_IP, UDP_PORT))
     sock.settimeout(1.0)
 
+# ============================ Variable List =================================================
+
     # Telemetry Data (Packet ID 6) - Speed, Gear, RPM, Throttle, Brake, DRS
     latest_telemetry = None
 
@@ -29,8 +31,12 @@ def start_listener():
     # Session History (Packet ID 11) - Lap and Sector Times (Current, Best, Previous)
     latest_session_history = None 
     previous_lap_num = 0
-    latest_completed_lap_sectors = None  # To store sector times for the most recently completed lap 
+    latest_completed_lap_sectors = None  # store sector times for most recently completed lap 
 
+    # Car/Vehicle + Equipment Data (Packet ID 7) - Fuel, ERS, Tyre (Type & Health), DRS
+    latest_car_status = None
+
+# ============================================================================================
     last_display_update = 0
     DISPLAY_REFRESH_RATE = 0.25  # seconds
 
@@ -124,13 +130,25 @@ def start_listener():
                 #        print(f"Gap Leader: {latest_lap_data.delta_to_race_leader_ms / 1000:.3f}s")
                 # ============================================================
 
+                elif packet_id == PACKET_ID_CAR_STATUS:
+                    latest_car_status = parse_car_status(
+                        data,
+                        header["player_car_index"]
+                    )
+
                 # Replaced with:               
                 # display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history)
 
                 current_time = time.time()
 
                 if current_time - last_display_update >= DISPLAY_REFRESH_RATE:
-                    display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history, latest_completed_lap_sectors)
+                    display_live_telemetry(
+                        latest_telemetry, 
+                        latest_lap_data, 
+                        latest_session_history, 
+                        latest_completed_lap_sectors,
+                        latest_car_status
+                        )
                     last_display_update = current_time
 
             except socket.timeout:

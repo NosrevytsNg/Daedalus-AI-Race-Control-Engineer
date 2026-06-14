@@ -16,8 +16,15 @@ PACKET_NAMES = {
     14: "Time Trial",
     15: "Lap Positions",
 }
-
-PACKET_ID_LAP_DATA = 2 # [2: "Lap Data"]
+# Milestone 1: LIVE Dashboard
+# Milestone 1.1: Car Telemetry Data
 PACKET_ID_CAR_TELEMETRY = 6 # [6: "Car Telemetry"]
+
+# Milestone 1.2: Lap and Sector Data
+PACKET_ID_LAP_DATA = 2 # [2: "Lap Data"]
 PACKET_ID_SESSION_HISTORY = 11  # [11: "Session History"]
+
+# Milestone 2: Vehicle and Equipment Status
+PACKET_ID_CAR_STATUS = 7 # [7: "Car Status"]
+
 MAX_CARS = 22
