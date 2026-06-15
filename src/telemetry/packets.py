@@ -31,4 +31,7 @@ PACKET_ID_CAR_STATUS = 7 # [7: "Car Status"]
 # Milestone 2.2: Session Data (Weather and Track)
 PACKET_ID_SESSION = 1 # [1: "Session"]
 
+# Milestone 2.3: = Vehicle Health (Damage %)
+PACKET_ID_CAR_DAMAGE = 10 # [10: "Car Damage"]
+
 MAX_CARS = 22

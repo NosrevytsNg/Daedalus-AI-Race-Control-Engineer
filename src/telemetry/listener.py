@@ -3,8 +3,8 @@ import time
 from datetime import datetime
 from src.telemetry.display import display_live_telemetry
 
-from src.telemetry.parser import parse_header, parse_car_telemetry, parse_lap_data, parse_session_history, parse_car_status, CompletedLapSectorTiming, parse_session_data
-from src.telemetry.packets import PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET_ID_LAP_DATA, PACKET_ID_SESSION_HISTORY, PACKET_ID_CAR_STATUS, PACKET_ID_SESSION
+from src.telemetry.parser import parse_header, parse_car_telemetry, parse_lap_data, parse_session_history, parse_car_status, CompletedLapSectorTiming, parse_session_data, parse_car_damage
+from src.telemetry.packets import PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET_ID_LAP_DATA, PACKET_ID_SESSION_HISTORY, PACKET_ID_CAR_STATUS, PACKET_ID_SESSION, PACKET_ID_CAR_DAMAGE
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 20777
@@ -38,6 +38,9 @@ def start_listener():
 
     # Session Data (Packet ID 1) - Weather and Track Condition
     latest_session_data = None
+
+    # Car Damage Data (Packet ID 10) - Component Damage %
+    latest_car_damage = None
 
 # ============================================================================================
     last_display_update = 0
@@ -116,6 +119,12 @@ def start_listener():
                 elif packet_id == PACKET_ID_SESSION:
                     latest_session_data = parse_session_data(data)
 
+                elif packet_id == PACKET_ID_CAR_DAMAGE:
+                    latest_car_damage = parse_car_damage(
+                        data,
+                        header["player_car_index"]
+                    )
+
 
                 current_time = time.time()
 
@@ -127,6 +136,7 @@ def start_listener():
                         latest_completed_lap_sectors,
                         latest_car_status,
                         latest_session_data,
+                        latest_car_damage,
                         )
                     last_display_update = current_time
 

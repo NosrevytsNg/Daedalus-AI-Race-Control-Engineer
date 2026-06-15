@@ -214,7 +214,7 @@ class CompletedLapSectorTiming:
     sector_3_time_ms: int
 
 # ================================================================
-# Car Status Packet (Packet ID 7)
+# Car Status Packet (Packet ID 7) & Car Damage Packet (Packet ID 10)
 # For vehicle condition and equipment info   
 @dataclass
 class CarStatus:
@@ -256,6 +256,60 @@ def parse_car_status(data, player_car_index):
         tyres_age_laps=values[15],
         ers_store_energy=values[19],
         ers_deploy_mode=values[20],
+    )
+
+# For component status and damage info 
+@dataclass
+class CarDamage:
+    tyre_wear: list
+    tyre_damage: list
+    brake_damage: list
+    front_left_wing_damage: int
+    front_right_wing_damage: int
+    rear_wing_damage: int
+    floor_damage: int
+    diffuser_damage: int
+    sidepod_damage: int
+    drs_fault: bool
+    ers_fault: bool
+    gearbox_damage: int
+    engine_damage: int
+
+CAR_DAMAGE_FORMAT = "<4f4B4B4B6B2B2B6B2B" # "<4f4B4B7B2B3B4B" / "<4f4B4B6B2B2B6B2B"
+CAR_DAMAGE_SIZE = struct.calcsize(CAR_DAMAGE_FORMAT)
+
+
+def parse_car_damage(data, player_car_index):
+    car_damage_start = HEADER_SIZE
+    car_offset = car_damage_start + (player_car_index * CAR_DAMAGE_SIZE)
+
+    if len(data) < car_offset + CAR_DAMAGE_SIZE:
+        return None
+
+    values = struct.unpack_from(CAR_DAMAGE_FORMAT, data, car_offset)
+
+    # print()
+    # print("=== CAR DAMAGE RAW VALUES ===")
+    # print(values)
+    # print()
+
+    return CarDamage(
+        tyre_wear=list(values[0:4]),
+        tyre_damage=list(values[4:8]),
+        brake_damage=list(values[8:12]),
+
+        front_left_wing_damage=values[12],
+        front_right_wing_damage=values[13],
+        rear_wing_damage=values[14],
+        floor_damage=values[15],
+        diffuser_damage=values[16],
+        sidepod_damage=values[17],
+
+        drs_fault=bool(values[18]),
+        ers_fault=bool(values[19]),
+
+        gearbox_damage=values[20],
+        engine_damage=values[21],
     )
 
 # ================================================================

@@ -158,6 +158,17 @@ def is_timed_session(session_type):
 
     return session_type in timed_sessions
 
+# For engine condition (blown/seized)
+def format_fault(status):
+    return "Yes" if status else "No"
+
+# Damage %
+def format_percent(value):
+    if value is None:
+        return "--"
+
+    return f"{value:.0f}%"
+
 # ==================================================================================================================================================================================================================================================================
 # LIVE Dashboard Function
 def display_live_telemetry(latest_telemetry, 
@@ -166,6 +177,7 @@ def display_live_telemetry(latest_telemetry,
                            latest_completed_lap_sectors, 
                            latest_car_status,
                            latest_session_data,
+                           latest_car_damage,
                            ):
     clear_terminal()
 
@@ -300,21 +312,92 @@ def display_live_telemetry(latest_telemetry,
     if latest_car_status is not None:
         print(f"Fuel:        {latest_car_status.fuel_remaining_laps:+.2f} laps")
         print(f"Fuel Tank:   {latest_car_status.fuel_in_tank:.2f} kg")
+        
         print(f"ERS:         {format_ers_percentage(latest_car_status.ers_store_energy)}")
         print(f"ERS Mode:    {format_ers_mode(latest_car_status.ers_deploy_mode)}")
-        print(f"Tyres:       {format_tyre_compound(latest_car_status.visual_tyre_compound)}")
-        print(f"Tyre Age:    {latest_car_status.tyres_age_laps} laps")
+        
         print(f"DRS Allowed: {'Yes' if latest_car_status.drs_allowed else 'No'}")
         print(f"Pit Limiter: {'On' if latest_car_status.pit_limiter_status else 'Off'}")
+
+        print(f"Compound:    {format_tyre_compound(latest_car_status.visual_tyre_compound)}")
+        print(f"Tyre Age:    {latest_car_status.tyres_age_laps} laps")
     else:   
         print("Fuel:        --")
         print("Fuel Tank:   --")
+        
         print("ERS:         --")
         print("ERS Mode:    --")
-        print("Tyres:       --")
-        print("Tyre Age:    --")
+        
         print("DRS Allowed: --")
         print("Pit Limiter: --")
+
+        print("Compound:    --")
+        print("Tyre Age:    --")
+
+    print()
+    print("----------------------------------------------------")
+    print("VEHICLE HEALTH")
+    print("----------------------------------------------------")
+    print()
+
+    if latest_car_damage is not None:
+        tyre_wear = latest_car_damage.tyre_wear
+        tyre_damage = latest_car_damage.tyre_damage
+        brake_damage = latest_car_damage.brake_damage
+
+        print(
+            "Tyre Wear:   "
+            f"FL {format_percent(tyre_wear[2])} | "
+            f"FR {format_percent(tyre_wear[3])} | "
+            f"RL {format_percent(tyre_wear[0])} | "
+            f"RR {format_percent(tyre_wear[1])}"
+        )
+
+    #     print(
+    #         "Tyre Damage: "
+    #         f"FL {format_percent(tyre_damage[2])} | "
+    #         f"FR {format_percent(tyre_damage[3])} | "
+    #         f"RL {format_percent(tyre_damage[0])} | "
+    #         f"RR {format_percent(tyre_damage[1])}"
+    #     )
+
+    #     print(
+    #         "Brake Damage:"
+    #         f" FL {format_percent(brake_damage[2])} | "
+    #         f"FR {format_percent(brake_damage[3])} | "
+    #         f"RL {format_percent(brake_damage[0])} | "
+    #         f"RR {format_percent(brake_damage[1])}"
+    #     )
+
+    #     print()
+    #     print(
+    #         f"Front Wing:  L {format_percent(latest_car_damage.front_left_wing_damage)} | "
+    #         f"R {format_percent(latest_car_damage.front_right_wing_damage)}"
+    #     )
+    #     print(f"Rear Wing:   {format_percent(latest_car_damage.rear_wing_damage)}")
+    #     print(f"Floor:       {format_percent(latest_car_damage.floor_damage)}")
+    #     print(f"Sidepod:     {format_percent(latest_car_damage.sidepod_damage)}")
+    #     print(f"Diffuser:    {format_percent(latest_car_damage.diffuser_damage)}")
+    #     print()
+    #     print(f"DRS Fault:   {format_fault(latest_car_damage.drs_fault)}")
+    #     print(f"ERS Fault:   {format_fault(latest_car_damage.ers_fault)}")
+    #     print(f"Gearbox:     {format_percent(latest_car_damage.gearbox_damage)}")
+    #     print(f"Engine:      {format_percent(latest_car_damage.engine_damage)}")
+    # else:
+    #     print("Tyre Wear:   --")
+    #     print("Tyre Damage: --")
+    #     print("Brake Damage:--")
+    #     print()
+    #     print("Front Wing:  --")
+    #     print("Rear Wing:   --")
+    #     print("Floor:       --")
+    #     print("Sidepod:     --")
+    #     print("Diffuser:    --")
+    #     print()
+    #     print("DRS Fault:   --")
+    #     print("ERS Fault:   --")
+    #     print("Gearbox:     --")
+    #     print("Engine:      --")
 
     #========================================================================================
     print()
@@ -336,7 +419,7 @@ def display_live_telemetry(latest_telemetry,
             print(f"Time Left:   {format_duration(latest_session_data.session_time_left)}")
         else:
             print("Time Left:   --")
-            
+
         print(f"Safety Car:  {format_safety_car_status(latest_session_data.safety_car_status)}")
 
     else:
