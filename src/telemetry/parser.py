@@ -257,3 +257,61 @@ def parse_car_status(data, player_car_index):
         ers_store_energy=values[19],
         ers_deploy_mode=values[20],
     )
+
+# ================================================================
+# Session Info Packet (Packet ID 1)
+# Weather and Track Info
+@dataclass
+class SessionData:
+    weather: int
+    track_temperature: int
+    air_temperature: int
+    total_laps: int
+    track_length: int
+    session_type: int
+    track_id: int
+    session_time_left: int
+    session_duration: int
+    pit_speed_limit: int
+    safety_car_status: int
+                       
+SESSION_DATA_FORMAT = "<BbbBHBbBHHBBBBBB" # "<BbbBHBbBHBBBBBBBHBB"
+SESSION_DATA_SIZE = struct.calcsize(SESSION_DATA_FORMAT)
+
+MARSHAL_ZONE_SIZE = struct.calcsize("<fb")
+MAX_MARSHAL_ZONES = 21
+
+
+def parse_session_data(data):
+    session_data_start = HEADER_SIZE
+
+    if len(data) < session_data_start + SESSION_DATA_SIZE:
+        return None
+
+    values = struct.unpack_from(
+        SESSION_DATA_FORMAT,
+        data,
+        session_data_start
+    )
+
+    marshal_zones_start = session_data_start + SESSION_DATA_SIZE
+    safety_car_offset = marshal_zones_start + (MAX_MARSHAL_ZONES * MARSHAL_ZONE_SIZE)
+
+    if len(data) < safety_car_offset + 1:
+        safety_car_status = 0
+    else:
+        safety_car_status = struct.unpack_from("<B", data, safety_car_offset)[0]
+
+    return SessionData(
+        weather=values[0],
+        track_temperature=values[1],
+        air_temperature=values[2],
+        total_laps=values[3],
+        track_length=values[4],
+        session_type=values[5],
+        track_id=values[6],
+        session_time_left=values[9],
+        session_duration=values[10],
+        pit_speed_limit=values[14],
+        safety_car_status=safety_car_status,
+    )

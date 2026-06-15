@@ -2,10 +2,12 @@ import os
 
 from src.telemetry.parser import format_time_ms
 
-# # Clear the console  
+# Clear the console  
 def clear_terminal(): 
     print("\033c", end="")
 
+# ==================================================================================================================================================================================================================================================================
+# HELPER FUNCTION
 # Insert placeholders for empty data (lap and sector timings)
 def format_time_ms_with_placeholder(milliseconds):
     if milliseconds is None or milliseconds <= 0:
@@ -74,7 +76,97 @@ def format_ers_percentage(ers_store_energy):
     ers_percentage = (ers_store_energy / 4_000_000) * 100
     return f"{ers_percentage:.0f}%"
 
-def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history, latest_completed_lap_sectors,latest_car_status):
+def format_weather(weather):
+    weather_map = {
+        0: "Clear",
+        1: "Light Cloud",
+        2: "Overcast",
+        3: "Light Rain",
+        4: "Heavy Rain",
+        5: "Storm",
+    }
+
+    return weather_map.get(weather, f"Unknown ({weather})")
+
+
+def format_session_type(session_type):
+    session_map = {
+        0: "Unknown",
+        1: "Practice 1",
+        2: "Practice 2",
+        3: "Practice 3",
+        4: "Short Practice",
+        5: "Qualifying 1",
+        6: "Qualifying 2",
+        7: "Qualifying 3",
+        8: "Short Qualifying",
+        9: "One-Shot Qualifying",
+        10: "Race",
+        11: "Race 2",
+        12: "Race 3",
+        13: "Time Trial",
+        15: "F1 World Grand Prix",
+    }
+
+    return session_map.get(session_type, f"Unknown ({session_type})")
+
+
+def format_safety_car_status(status):
+    safety_car_map = {
+        0: "None",
+        1: "Full Safety Car",
+        2: "Virtual Safety Car",
+        3: "Formation Lap",
+    }
+
+    return safety_car_map.get(status, f"Unknown ({status})")
+
+
+def format_duration(seconds):
+    if seconds is None or seconds < 0:
+        return "--"
+
+    minutes = seconds // 60
+    remaining_seconds = seconds % 60
+
+    return f"{minutes:02d}:{remaining_seconds:02d}"
+
+def is_race_session(session_type):
+    race_sessions = {
+        10,  # Race
+        11,  # Race 2
+        12,  # Race 3
+        15,  # F1 World Grand Prix
+    }
+
+    return session_type in race_sessions
+
+
+def is_timed_session(session_type):
+    timed_sessions = {
+        1,  # Practice 1
+        2,  # Practice 2
+        3,  # Practice 3
+        4,  # Short Practice
+        5,  # Qualifying 1
+        6,  # Qualifying 2
+        7,  # Qualifying 3
+        8,  # Short Qualifying
+        9,  # One-Shot Qualifying
+        13,  # Time Trial
+    }
+
+    return session_type in timed_sessions
+
+# ==================================================================================================================================================================================================================================================================
+# LIVE Dashboard Function
+def display_live_telemetry(latest_telemetry, 
+                           latest_lap_data, 
+                           latest_session_history, 
+                           latest_completed_lap_sectors, 
+                           latest_car_status,
+                           latest_session_data,
+                           ):
     clear_terminal()
 
     # Display telemetry terminal
@@ -223,3 +315,35 @@ def display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_his
         print("Tyre Age:    --")
         print("DRS Allowed: --")
         print("Pit Limiter: --")
+
+    #========================================================================================
+    print()
+    print("----------------------------------------------------")
+    print("SESSION")
+    print("----------------------------------------------------")
+    #print()
+
+    if latest_session_data is not None:
+        print(f"Session:     {format_session_type(latest_session_data.session_type)}")
+        print(f"Weather:     {format_weather(latest_session_data.weather)}")
+        print(f"Track Temp:  {latest_session_data.track_temperature}°C")
+        print(f"Air Temp:    {latest_session_data.air_temperature}°C")
+        print(f"Track Length:{latest_session_data.track_length} m")
+
+        if is_race_session(latest_session_data.session_type):
+            print(f"Total Laps:  {latest_session_data.total_laps}")
+        elif is_timed_session(latest_session_data.session_type):
+            print(f"Time Left:   {format_duration(latest_session_data.session_time_left)}")
+        else:
+            print("Time Left:   --")
+            
+        print(f"Safety Car:  {format_safety_car_status(latest_session_data.safety_car_status)}")
+
+    else:
+        print("Session:     --")
+        print("Weather:     --")
+        print("Track Temp:  --")
+        print("Air Temp:    --")
+        print("Track Length:--")
+        print("Time Left:   --")
+        print("Safety Car:  --")

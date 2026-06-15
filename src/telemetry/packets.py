@@ -24,7 +24,11 @@ PACKET_ID_CAR_TELEMETRY = 6 # [6: "Car Telemetry"]
 PACKET_ID_LAP_DATA = 2 # [2: "Lap Data"]
 PACKET_ID_SESSION_HISTORY = 11  # [11: "Session History"]
 
-# Milestone 2: Vehicle and Equipment Status
+# Milestone 2: Vehicle and Session Data
+# Milestone 2.1: Vehicle and Equipment Status
 PACKET_ID_CAR_STATUS = 7 # [7: "Car Status"]
+
+# Milestone 2.2: Session Data (Weather and Track)
+PACKET_ID_SESSION = 1 # [1: "Session"]
 
 MAX_CARS = 22

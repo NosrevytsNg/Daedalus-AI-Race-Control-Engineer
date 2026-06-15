@@ -3,8 +3,8 @@ import time
 from datetime import datetime
 from src.telemetry.display import display_live_telemetry
 
-from src.telemetry.parser import parse_header, parse_car_telemetry, parse_lap_data, parse_session_history, parse_car_status, CompletedLapSectorTiming
-from src.telemetry.packets import PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET_ID_LAP_DATA, PACKET_ID_SESSION_HISTORY, PACKET_ID_CAR_STATUS
+from src.telemetry.parser import parse_header, parse_car_telemetry, parse_lap_data, parse_session_history, parse_car_status, CompletedLapSectorTiming, parse_session_data
+from src.telemetry.packets import PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET_ID_LAP_DATA, PACKET_ID_SESSION_HISTORY, PACKET_ID_CAR_STATUS, PACKET_ID_SESSION
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 20777
@@ -35,6 +35,9 @@ def start_listener():
 
     # Car/Vehicle + Equipment Data (Packet ID 7) - Fuel, ERS, Tyre (Type & Health), DRS
     latest_car_status = None
+
+    # Session Data (Packet ID 1) - Weather and Track Condition
+    latest_session_data = None
 
 # ============================================================================================
     last_display_update = 0
@@ -103,32 +106,6 @@ def start_listener():
                     if session_history is not None:
                         latest_session_history = session_history
 
-                # ============================================================
-                # Clear the console and display LIVE car telemetry terminal
-                #if latest_telemetry is not None:                    
-                #    print("\033c", end="")
-                #    print("====================================")
-                #    print("DAEDALUS LIVE TELEMETRY")
-                #    print("====================================")
-                #    print()
-                #    print(f"Speed:     {latest_telemetry.speed} km/h")
-                #    print(f"Gear:      {latest_telemetry.gear}")
-                #    print(f"RPM:       {latest_telemetry.rpm}")
-                #    print(f"Throttle:  {latest_telemetry.throttle * 100:.0f}%")
-                #    print(f"Brake:     {latest_telemetry.brake * 100:.0f}%")
-                #    print(f"DRS:       {'ON' if latest_telemetry.drs else 'OFF'}")
-
-                    # Add to console and display LIVE Lap Data
-                #    if latest_lap_data is not None:
-                #        print()
-                #        print(f"Position:  {latest_lap_data.car_position}")
-                #        print(f"Lap:       {latest_lap_data.current_lap_num}")
-                #        print(f"Sector:    {latest_lap_data.sector+1}")
-                #        print(f"Lap Time:  {format_time_ms(latest_lap_data.current_lap_time_ms)}")
-                #        print(f"Last Lap:  {format_time_ms(latest_lap_data.last_lap_time_ms)}")
-                #        print(f"Gap Ahead: {latest_lap_data.delta_to_car_in_front_ms / 1000:.3f}s")
-                #        print(f"Gap Leader: {latest_lap_data.delta_to_race_leader_ms / 1000:.3f}s")
-                # ============================================================
 
                 elif packet_id == PACKET_ID_CAR_STATUS:
                     latest_car_status = parse_car_status(
@@ -136,8 +113,9 @@ def start_listener():
                         header["player_car_index"]
                     )
 
-                # Replaced with:               
-                # display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history)
+                elif packet_id == PACKET_ID_SESSION:
+                    latest_session_data = parse_session_data(data)
+
 
                 current_time = time.time()
 
@@ -147,9 +125,13 @@ def start_listener():
                         latest_lap_data, 
                         latest_session_history, 
                         latest_completed_lap_sectors,
-                        latest_car_status
+                        latest_car_status,
+                        latest_session_data,
                         )
                     last_display_update = current_time
+
+                # Replaced: display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history)              
+
 
             except socket.timeout:
                 continue
@@ -159,3 +141,31 @@ def start_listener():
         print("Shutting down...")
     finally:
         sock.close()
+
+
+# ================= Initial Dashboard Layout ===========================================
+# Clear the console and display LIVE car telemetry terminal
+#if latest_telemetry is not None:                    
+#    print("\033c", end="")
+#    print("====================================")
+#    print("DAEDALUS LIVE TELEMETRY")
+#    print("====================================")
+#    print()
+#    print(f"Speed:     {latest_telemetry.speed} km/h")
+#    print(f"Gear:      {latest_telemetry.gear}")
+#    print(f"RPM:       {latest_telemetry.rpm}")
+#    print(f"Throttle:  {latest_telemetry.throttle * 100:.0f}%")
+#    print(f"Brake:     {latest_telemetry.brake * 100:.0f}%")
+#    print(f"DRS:       {'ON' if latest_telemetry.drs else 'OFF'}")
+
+    # Add to console and display LIVE Lap Data
+#    if latest_lap_data is not None:
+#        print()
+#        print(f"Position:  {latest_lap_data.car_position}")
+#        print(f"Lap:       {latest_lap_data.current_lap_num}")
+#        print(f"Sector:    {latest_lap_data.sector+1}")
+#        print(f"Lap Time:  {format_time_ms(latest_lap_data.current_lap_time_ms)}")
+#        print(f"Last Lap:  {format_time_ms(latest_lap_data.last_lap_time_ms)}")
+#        print(f"Gap Ahead: {latest_lap_data.delta_to_car_in_front_ms / 1000:.3f}s")
+#        print(f"Gap Leader: {latest_lap_data.delta_to_race_leader_ms / 1000:.3f}s")
+# ====================================================================================
