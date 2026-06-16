@@ -27,7 +27,7 @@ v0.3.0 — Vehicle telemetry dashboard
 - Sector analysis
   Best sector, current sector, previous sector, delta
 
-Phase 3: Session and Weather Data
+Phase 3: Session and Weather Data ✅
 v0.4.0 — Session and weather intelligence
 - Packet 1: Session Data
   Weather, track temp, air temp, session type,
