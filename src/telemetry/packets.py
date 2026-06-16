@@ -16,22 +16,23 @@ PACKET_NAMES = {
     14: "Time Trial",
     15: "Lap Positions",
 }
-# Milestone 1: LIVE Dashboard
-# Milestone 1.1: Car Telemetry Data
+# 1. Car Telemetry Data
 PACKET_ID_CAR_TELEMETRY = 6 # [6: "Car Telemetry"]
 
-# Milestone 1.2: Lap and Sector Data
+# 2. Lap and Sector Data
 PACKET_ID_LAP_DATA = 2 # [2: "Lap Data"]
 PACKET_ID_SESSION_HISTORY = 11  # [11: "Session History"]
 
-# Milestone 2: Vehicle and Session Data
-# Milestone 2.1: Vehicle and Equipment Status
+# 3. Vehicle and Session Data
 PACKET_ID_CAR_STATUS = 7 # [7: "Car Status"]
 
-# Milestone 2.2: Session Data (Weather and Track)
+# 4. Session Data (Weather and Track)
 PACKET_ID_SESSION = 1 # [1: "Session"]
 
-# Milestone 2.3: = Vehicle Health (Damage %)
+# 5. Vehicle Health (Damage %)
 PACKET_ID_CAR_DAMAGE = 10 # [10: "Car Damage"]
+
+# 6. Tyre Intelligence and Strats
+PACKET_ID_TYRE_SETS = 12 # [12: "Tyre Sets"]
 
 MAX_CARS = 22

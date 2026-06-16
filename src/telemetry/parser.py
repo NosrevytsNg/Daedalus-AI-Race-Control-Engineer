@@ -430,3 +430,87 @@ def parse_session_data(data):
         pit_speed_limit=values[14],
         safety_car_status=safety_car_status,
     )
+
+# ================================================================
+# Tyre Set Packet (Packet ID 12)
+
+@dataclass
+class TyreSet:
+    actual_tyre_compound: int
+    visual_tyre_compound: int
+    wear: int
+    available: bool
+    recommended_session: int
+    life_span: int
+    usable_life: int
+    lap_delta_time: int
+    fitted: bool
+
+
+@dataclass
+class TyreSets:
+    car_idx: int
+    fitted_idx: int
+    tyre_sets: list
+    fitted_set: TyreSet | None
+    available_sets: list
+
+
+TYRE_SET_FORMAT = "<BBBBBBBhB"
+TYRE_SET_SIZE = struct.calcsize(TYRE_SET_FORMAT)
+
+TYRE_SETS_COUNT = 20
+TYRE_SETS_PACKET_SIZE = HEADER_SIZE + 1 + (TYRE_SET_SIZE * TYRE_SETS_COUNT) + 1
+
+
+def parse_tyre_sets(data, player_car_index):
+    tyre_sets_start = HEADER_SIZE
+
+    if len(data) < TYRE_SETS_PACKET_SIZE:
+        return None
+
+    car_idx = struct.unpack_from("<B", data, tyre_sets_start)[0]
+
+    if car_idx != player_car_index:
+        return None
+
+    tyre_sets = []
+    tyre_data_start = tyre_sets_start + 1
+
+    for i in range(TYRE_SETS_COUNT):
+        offset = tyre_data_start + (i * TYRE_SET_SIZE)
+        values = struct.unpack_from(TYRE_SET_FORMAT, data, offset)
+
+        tyre_set = TyreSet(
+            actual_tyre_compound=values[0],
+            visual_tyre_compound=values[1],
+            wear=values[2],
+            available=bool(values[3]),
+            recommended_session=values[4],
+            life_span=values[5],
+            usable_life=values[6],
+            lap_delta_time=values[7],
+            fitted=bool(values[8]),
+        )
+
+        tyre_sets.append(tyre_set)
+
+    fitted_idx_offset = tyre_data_start + (TYRE_SET_SIZE * TYRE_SETS_COUNT)
+    fitted_idx = struct.unpack_from("<B", data, fitted_idx_offset)[0]
+
+    fitted_set = None
+    if 0 <= fitted_idx < len(tyre_sets):
+        fitted_set = tyre_sets[fitted_idx]
+
+    available_sets = [
+        tyre_set for tyre_set in tyre_sets
+        if tyre_set.available
+    ]
+
+    return TyreSets(
+        car_idx=car_idx,
+        fitted_idx=fitted_idx,
+        tyre_sets=tyre_sets,
+        fitted_set=fitted_set,
+        available_sets=available_sets,
+    )

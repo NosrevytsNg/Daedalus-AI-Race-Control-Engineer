@@ -169,6 +169,29 @@ def format_percent(value):
 
     return f"{value:.0f}%"
 
+def suggest_pit_window(latest_lap_data, latest_car_damage, latest_tyre_sets):
+    if latest_tyre_sets is None or latest_tyre_sets.fitted_set is None:
+        return "--"
+
+    fitted = latest_tyre_sets.fitted_set
+
+    if latest_car_damage is not None:
+        max_tyre_damage = max(latest_car_damage.tyre_damage)
+
+        if max_tyre_damage >= 80:
+            return "BOX NOW - tyre damage critical"
+
+    if fitted.wear >= 70:
+        return "BOX SOON - tyre wear high"
+
+    if fitted.life_span <= 2:
+        return "PIT WINDOW OPEN - tyre life low"
+
+    if fitted.wear >= 55:
+        return "Monitor tyres - approaching pit window"
+
+    return "Stay out"
+
 # ==================================================================================================================================================================================================================================================================
 # LIVE Dashboard Function
 def display_live_telemetry(latest_telemetry, 
@@ -178,6 +201,7 @@ def display_live_telemetry(latest_telemetry,
                            latest_car_status,
                            latest_session_data,
                            latest_car_damage,
+                           latest_tyre_sets,
                            ):
     clear_terminal()
 
@@ -430,3 +454,179 @@ def display_live_telemetry(latest_telemetry,
         print("Track Length:--")
         print("Time Left:   --")
         print("Safety Car:  --")
+
+        #========================================================================================
+    print()
+    print("----------------------------------------------------")
+    print("TYRE INTELLIGENCE")
+    print("----------------------------------------------------")
+
+    if latest_tyre_sets is not None and latest_tyre_sets.fitted_set is not None:
+        fitted = latest_tyre_sets.fitted_set
+
+        print(f"Current Set: {format_tyre_compound(fitted.visual_tyre_compound)}")
+        print(f"Set Index:   {latest_tyre_sets.fitted_idx}")
+        print(f"Set Wear:    {fitted.wear}%")
+        print(f"Life Span:   {fitted.life_span} laps")
+        print(f"Usable Life: {fitted.usable_life} laps")
+
+        print()
+        print("Available Sets:")
+
+        for i, tyre_set in enumerate(latest_tyre_sets.tyre_sets):
+            if tyre_set.available:
+                fitted_marker = " <- fitted" if i == latest_tyre_sets.fitted_idx else ""
+                print(
+                    f"[{i:02}] "
+                    f"{format_tyre_compound(tyre_set.visual_tyre_compound):<13} "
+                    f"Wear {tyre_set.wear:>3}% | "
+                    f"Life {tyre_set.life_span:>2} | "
+                    f"Usable {tyre_set.usable_life:>2}"
+                    f"{fitted_marker}"
+                )
+    else:
+        print("Current Set: --")
+        print("Available Sets: --")
+
+    print(f"Pit Advice:  {suggest_pit_window(latest_lap_data, latest_car_damage, latest_tyre_sets)}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
