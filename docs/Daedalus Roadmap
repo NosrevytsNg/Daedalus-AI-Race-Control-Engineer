@@ -6,7 +6,7 @@ v0.1.0 — Project setup
 - Clean folder structure
 - Basic main.py launch
 
-Phase 1: Telemetry Acquition
+Phase 1: Telemetry Acquition ✅
 v0.2.0 — UDP telemetry core
 - UDP listener on port 20777
 - Packet header parser
