@@ -353,51 +353,51 @@ def display_live_telemetry(latest_telemetry,
             f"RR {format_percent(tyre_wear[1])}"
         )
 
-    #     print(
-    #         "Tyre Damage: "
-    #         f"FL {format_percent(tyre_damage[2])} | "
-    #         f"FR {format_percent(tyre_damage[3])} | "
-    #         f"RL {format_percent(tyre_damage[0])} | "
-    #         f"RR {format_percent(tyre_damage[1])}"
-    #     )
+        print(
+            "Tyre Damage: "
+            f"FL {format_percent(tyre_damage[2])} | "
+            f"FR {format_percent(tyre_damage[3])} | "
+            f"RL {format_percent(tyre_damage[0])} | "
+            f"RR {format_percent(tyre_damage[1])}"
+        )
 
-    #     print(
-    #         "Brake Damage:"
-    #         f" FL {format_percent(brake_damage[2])} | "
-    #         f"FR {format_percent(brake_damage[3])} | "
-    #         f"RL {format_percent(brake_damage[0])} | "
-    #         f"RR {format_percent(brake_damage[1])}"
-    #     )
+        print(
+            "Brake Damage:"
+            f" FL {format_percent(brake_damage[2])} | "
+            f"FR {format_percent(brake_damage[3])} | "
+            f"RL {format_percent(brake_damage[0])} | "
+            f"RR {format_percent(brake_damage[1])}"
+        )
 
-    #     print()
-    #     print(
-    #         f"Front Wing:  L {format_percent(latest_car_damage.front_left_wing_damage)} | "
-    #         f"R {format_percent(latest_car_damage.front_right_wing_damage)}"
-    #     )
-    #     print(f"Rear Wing:   {format_percent(latest_car_damage.rear_wing_damage)}")
-    #     print(f"Floor:       {format_percent(latest_car_damage.floor_damage)}")
-    #     print(f"Sidepod:     {format_percent(latest_car_damage.sidepod_damage)}")
-    #     print(f"Diffuser:    {format_percent(latest_car_damage.diffuser_damage)}")
-    #     print()
-    #     print(f"DRS Fault:   {format_fault(latest_car_damage.drs_fault)}")
-    #     print(f"ERS Fault:   {format_fault(latest_car_damage.ers_fault)}")
-    #     print(f"Gearbox:     {format_percent(latest_car_damage.gearbox_damage)}")
-    #     print(f"Engine:      {format_percent(latest_car_damage.engine_damage)}")
-    # else:
-    #     print("Tyre Wear:   --")
-    #     print("Tyre Damage: --")
-    #     print("Brake Damage:--")
-    #     print()
-    #     print("Front Wing:  --")
-    #     print("Rear Wing:   --")
-    #     print("Floor:       --")
-    #     print("Sidepod:     --")
-    #     print("Diffuser:    --")
-    #     print()
-    #     print("DRS Fault:   --")
-    #     print("ERS Fault:   --")
-    #     print("Gearbox:     --")
-    #     print("Engine:      --")
+        print()
+        print(
+            f"Front Wing:  L {format_percent(latest_car_damage.front_left_wing_damage)} | "
+            f"R {format_percent(latest_car_damage.front_right_wing_damage)}"
+        )
+        print(f"Rear Wing:   {format_percent(latest_car_damage.rear_wing_damage)}")
+        print(f"Floor:       {format_percent(latest_car_damage.floor_damage)}")
+        print(f"Sidepod:     {format_percent(latest_car_damage.sidepod_damage)}")
+        print(f"Diffuser:    {format_percent(latest_car_damage.diffuser_damage)}")
+        print()
+        print(f"DRS Fault:   {format_fault(latest_car_damage.drs_fault)}")
+        print(f"ERS Fault:   {format_fault(latest_car_damage.ers_fault)}")
+        print(f"Gearbox:     {format_percent(latest_car_damage.gearbox_damage)}")
+        print(f"Engine:      {format_percent(latest_car_damage.engine_damage)}")
+    else:
+        print("Tyre Wear:   --")
+        print("Tyre Damage: --")
+        print("Brake Damage:--")
+        print()
+        print("Front Wing:  --")
+        print("Rear Wing:   --")
+        print("Floor:       --")
+        print("Sidepod:     --")
+        print("Diffuser:    --")
+        print()
+        print("DRS Fault:   --")
+        print("ERS Fault:   --")
+        print("Gearbox:     --")
+        print("Engine:      --")
 
     #========================================================================================
     print()

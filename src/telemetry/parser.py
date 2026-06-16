@@ -275,8 +275,69 @@ class CarDamage:
     gearbox_damage: int
     engine_damage: int
 
-CAR_DAMAGE_FORMAT = "<4f4B4B4B6B2B2B6B2B" # "<4f4B4B7B2B3B4B" / "<4f4B4B6B2B2B6B2B"
+CAR_DAMAGE_FORMAT = "<4f4B4B4B6B2B2B6B2B" #"<4f4B4B4B6B2B2B6B2B" / "<4f4B4B7B2B3B4B" / "<4f4B4B6B2B2B6B2B"
 CAR_DAMAGE_SIZE = struct.calcsize(CAR_DAMAGE_FORMAT)
+
+# CAR_DAMAGE_FIELDS = [
+#     "tyres_wear_rl",
+#     "tyres_wear_rr",
+#     "tyres_wear_fl",
+#     "tyres_wear_fr",
+
+#     "tyres_damage_rl",
+#     "tyres_damage_rr",
+#     "tyres_damage_fl",
+#     "tyres_damage_fr",
+
+#     "brakes_damage_rl",
+#     "brakes_damage_rr",
+#     "brakes_damage_fl",
+#     "brakes_damage_fr",
+
+#     "tyre_blisters_rl",
+#     "tyre_blisters_rr",
+#     "tyre_blisters_fl",
+#     "tyre_blisters_fr",
+
+#     "front_left_wing_damage",
+#     "front_right_wing_damage",
+#     "rear_wing_damage",
+#     "floor_damage",
+#     "diffuser_damage",
+#     "sidepod_damage",
+
+#     "drs_fault",
+#     "ers_fault",
+
+#     "gearbox_damage",
+#     "engine_damage",
+
+#     "engine_mguh_wear",
+#     "engine_es_wear",
+#     "engine_ce_wear",
+#     "engine_ice_wear",
+#     "engine_mguk_wear",
+#     "engine_tc_wear",
+
+#     "engine_blown",
+#     "engine_seized",
+# ]
+
+# def parse_packet_10_player_car(data, player_car_index):
+#     offset = HEADER_SIZE + (player_car_index * CAR_DAMAGE_SIZE)
+#     values = struct.unpack_from(CAR_DAMAGE_FORMAT, data, offset)
+#     return values
+
+# def debug_print_packet_10(values):
+#     print("\n=== Packet 10 Car Damage Debug ===")
+
+#     for i, (name, value) in enumerate(zip(CAR_DAMAGE_FIELDS, values)):
+#         if isinstance(value, float):
+#             print(f"[{i:02}] {name:<28} = {value:.2f}")
+#         else:
+#             print(f"[{i:02}] {name:<28} = {value}")
+
+#     print("=" * 50)
 
 
 def parse_car_damage(data, player_car_index):
@@ -298,18 +359,18 @@ def parse_car_damage(data, player_car_index):
         tyre_damage=list(values[4:8]),
         brake_damage=list(values[8:12]),
 
-        front_left_wing_damage=values[12],
-        front_right_wing_damage=values[13],
-        rear_wing_damage=values[14],
-        floor_damage=values[15],
-        diffuser_damage=values[16],
-        sidepod_damage=values[17],
+        front_left_wing_damage=values[16],
+        front_right_wing_damage=values[17],
+        rear_wing_damage=values[18],
+        floor_damage=values[19],
+        diffuser_damage=values[20],
+        sidepod_damage=values[21],
 
-        drs_fault=bool(values[18]),
-        ers_fault=bool(values[19]),
+        drs_fault=bool(values[22]),
+        ers_fault=bool(values[23]),
 
-        gearbox_damage=values[20],
-        engine_damage=values[21],
+        gearbox_damage=values[24],
+        engine_damage=values[25],
     )
 
 # ================================================================
