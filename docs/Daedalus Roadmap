@@ -13,7 +13,7 @@ v0.2.0 — UDP telemetry core
 - Packet ID detection
 - Clean terminal refresh
 
-Phase 2: LIVE Telemetry Dashboard
+Phase 2: LIVE Telemetry Dashboard ✅
 v0.3.0 — Vehicle telemetry dashboard
 - Packet 6: Car Telemetry
   Speed, gear, RPM, throttle, brake, DRS
