@@ -63,7 +63,7 @@ Milestone 0.5A — Reverse-engineer Packet 10 damage fields
 - Test DRS/ERS/gearbox/engine faults if possible
 - Only display verified fields
 
-Phase 5: Tyre Stratgey Intelligence
+Phase 5: Tyre Stratgey Intelligence ✅
 v0.6.0 — Tyre intelligence
 - Packet 12: Tyre Sets
 - Current tyre set
