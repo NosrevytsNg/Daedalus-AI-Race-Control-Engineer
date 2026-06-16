@@ -1,0 +1,163 @@
+Phase 0: Project Foundation
+v0.1.0 — Project setup
+- VS Code setup
+- Python virtual environment
+- GitHub repository
+- Clean folder structure
+- Basic main.py launch
+
+Phase 1: Telemetry Acquition
+v0.2.0 — UDP telemetry core
+- UDP listener on port 20777
+- Packet header parser
+- Packet ID detection
+- Clean terminal refresh
+
+Phase 2: LIVE Telemetry Dashboard
+v0.3.0 — Vehicle telemetry dashboard
+- Packet 6: Car Telemetry
+  Speed, gear, RPM, throttle, brake, DRS
+
+- Packet 2: Lap Data
+  Position, lap, current lap, last lap, gaps
+
+- Packet 11: Session History
+  Best lap, best sector times
+
+- Sector analysis
+  Best sector, current sector, previous sector, delta
+
+Phase 3: Session and Weather Data
+v0.4.0 — Session and weather intelligence
+- Packet 1: Session Data
+  Weather, track temp, air temp, session type,
+  track length, total laps/time left, safety car
+
+Phase 4: Vehicle Health Data
+v0.5.0 — Vehicle health Intelligence
+- Packet 10: Car Damage
+
+Confirmed:
+- Tyre wear
+
+Under investigation:
+- Tyre damage
+- Front wing damage
+- Rear wing damage
+- Floor damage
+- Sidepod damage
+- Diffuser damage
+- DRS fault
+- ERS fault
+- Gearbox damage
+- Engine damage
+
+Phase 4A: Packet 10 Reverse Engineering :<
+Milestone 0.5A — Reverse-engineer Packet 10 damage fields
+- Add Packet 10 debug mode
+- Print raw values with indexes
+- Test healthy baseline
+- Test front wing damage
+- Test tyre damage/puncture
+- Test rear wing/floor/sidepod/diffuser if possible
+- Test DRS/ERS/gearbox/engine faults if possible
+- Only display verified fields
+
+Phase 5: Tyre Stratgey Intelligence
+v0.6.0 — Tyre intelligence
+- Packet 12: Tyre Sets
+- Current tyre set
+- Available tyre sets
+- Compound availability
+- Tyre age
+- Tyre wear trend
+- Suggested pit window
+
+Phase 6: Race Engineer Rules and Configurations
+v0.7.0 — Rule-based race engineer
+- Tyre wear warnings
+- Fuel warnings
+- ERS warnings
+- Damage alerts
+- Weather change alerts
+- Safety car alerts
+- DRS availability/fault alerts
+
+Phase 7: Strategy Advisor
+v0.8.0 — Strategy intelligence
+- Pit stop timing
+- Tyre choice recommendation
+- Undercut/overcut logic
+- Fuel management
+- ERS deployment advice
+- Rain/intermediate/wet tyre calls
+
+Phase 8: Race Engineer/Analyst
+v0.9.0 — Performance analysis
+- Sector comparison
+- Lap comparison
+- Time loss detection
+- Consistency analysis
+- Braking/throttle pattern review
+- “Where did I lose time?” feedback
+
+Phase 9: Voice
+v0.10.0 — Voice engineer
+- Text-to-speech alerts
+- Push-to-talk questions
+- “Daedalus, tyre status?”
+- “Daedalus, can I push?”
+- “Daedalus, should I box?”
+
+Phase 10: AI Race Engineer MVP
+v1.0.0 — First complete AI race engineer
+- Live telemetry dashboard
+- Vehicle health monitoring
+- Tyre/fuel/ERS strategy
+- Weather-aware recommendations
+- Rule-based alerts
+- Voice interaction
+- AI-assisted race explanations
+
+Phase 11: Future Expansion
+v1.5.0 — GUI dashboard
+- Web dashboard
+- Charts
+- Tyre degradation graphs
+- Lap history
+- Session summary
+
+v2.0.0 - Application + UI/UX Design + Dashboard
+- Live telemetry dashboard
+- Vehicle health monitoring
+- Tyre/fuel/ERS strategy
+- Weather-aware recommendations
+- Rule-based alerts
+- Voice interaction
+- AI-assisted race explanations
+- Charts
+- Tyre degradation graphs
+- Lap history
+- Session summary
+
+v3.0.0 — Full Daedalus platform
+- LLM race engineer
+- Post-race reports
+- Driver coaching summaries
+- Strategy simulation
+- Telemetry logging/replay
+- Multi-game support
+
+
+
+
+
+
+
+
+
+
+
+
+
+
