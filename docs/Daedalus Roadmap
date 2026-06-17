@@ -38,19 +38,19 @@ v0.5.0 — Vehicle health Intelligence
 - Packet 10: Car Damage
 
 Confirmed:
-- Tyre wear
+- Tyre wear                 ✅ Implemented / validated
 
-Under investigation:
-- Tyre damage
-- Front wing damage
-- Rear wing damage
-- Floor damage
-- Sidepod damage
-- Diffuser damage
-- DRS fault
-- ERS fault
-- Gearbox damage
-- Engine damage
+Under investigation: 🚨🚩
+- Tyre damage               ✅ Implemented / validated
+- Front wing damage         🟡 Implemented / partially validated
+- Rear wing damage          🔴 Implemented / unvalidated
+- Floor damage              ✅ Implemented / validated
+- Sidepod damage            🟡 Implemented / partially validated
+- Diffuser damage           🟡 Implemented / partially validated
+- DRS fault                 🔴 Implemented / unvalidated
+- ERS fault                 🔴 Implemented / unvalidated
+- Gearbox damage            🔴 Implemented / unvalidated
+- Engine damage             🔴 Implemented / unvalidated
 
 Phase 4A: Packet 10 Reverse Engineering :< ✅
 Milestone 0.5A — Reverse-engineer Packet 10 damage fields
@@ -81,24 +81,24 @@ v0.6.5 — Race engineer data readiness ✅
 - Keep DRS/ERS fault from Packet 10 as spec-supported
 - Keep Safety Car status from Packet 1
 
-Phase 6: Race Engineer Rules and Configurations ✅
+Phase 6: Race Engineer Rules and Configurations ✅🚩
 v0.7.0 — Rule-based race engineer 
-- Tyre wear warnings (v0.7.1)            ✅ Implemented / partially validated
-- Fuel warnings (v0.7.2)                 🟡 Implemented / unvalidated
-- ERS warnings (v0.7.3)                  🟡 Implemented / unvalidated
+- Tyre wear warnings (v0.7.1)            🟡 Implemented / partially validated
+- Fuel warnings (v0.7.2)                 🔴 Implemented / unvalidated
+- ERS warnings (v0.7.3)                  🔴 Implemented / unvalidated
 - Damage alerts (v0.7.4)                 ✅ Implemented / validated
-- Weather change alerts (v0.7.5)         🟡 Implemented / unvalidated
-- Safety car alerts (v0.7.6)             🟡 Implemented / unvalidated
-- DRS availability/fault alerts (v0.7.7) 🟡 Implemented / unvalidated      
+- Weather change alerts (v0.7.5)         🔴 Implemented / unvalidated
+- Safety car alerts (v0.7.6)             🔴 Implemented / unvalidated
+- DRS availability/fault alerts (v0.7.7) 🔴 Implemented / unvalidated      
 
 Phase 7: Strategy Advisor ✅
 v0.8.0 — Strategy intelligence 
-- Pit stop timing
-- Tyre choice recommendation
-- Undercut/overcut logic
-- Fuel management
-- ERS deployment advice
-- Rain/intermediate/wet tyre calls
+- Pit stop timing                        🟡 Implemented / partially validated
+- Tyre choice recommendation             ✅ Implemented / validated
+- Undercut/overcut logic                 ✅ Implemented / validated
+- Fuel management                        🟡 Implemented / partially validated
+- ERS deployment advice                  ✅ Implemented / validated
+- Rain/intermediate/wet tyre calls       ✅ Implemented / validated
 
 Phase 8: Race Engineer/Analyst
 v0.9.0 — Performance analysis
