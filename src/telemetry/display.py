@@ -1,7 +1,7 @@
 import os
 
 from src.telemetry.parser import format_time_ms
-from src.telemetry.race_engineer import suggest_pit_window
+from src.telemetry.race_engineer import config_engineer_messages, suggest_pit_window
 
 # Clear the console  
 def clear_terminal(): 
@@ -481,6 +481,26 @@ def display_live_telemetry(latest_telemetry,
         print(f"Life Span:   {fitted.life_span} laps")
         print(f"Usable Life: {fitted.usable_life} laps")
 
+        if latest_car_damage is not None:
+            tyre_wear = latest_car_damage.tyre_wear
+            tyre_damage = latest_car_damage.tyre_damage
+
+        print(
+            "Tyre Wear:   "
+            f"FL {format_percent(tyre_wear[2])} | "
+            f"FR {format_percent(tyre_wear[3])} | "
+            f"RL {format_percent(tyre_wear[0])} | "
+            f"RR {format_percent(tyre_wear[1])}"
+        )
+
+        print(
+            "Tyre Damage: "
+            f"FL {format_percent(tyre_damage[2])} | "
+            f"FR {format_percent(tyre_damage[3])} | "
+            f"RL {format_percent(tyre_damage[0])} | "
+            f"RR {format_percent(tyre_damage[1])}"
+        )
+
         print()
         print("Available Sets:")
 
@@ -501,7 +521,28 @@ def display_live_telemetry(latest_telemetry,
     print()
     print(f"Pit Advice:  {suggest_pit_window(latest_lap_data, latest_car_damage, latest_tyre_sets)}")
 
+    engineer_messages = config_engineer_messages(
+        latest_car_status,
+        latest_car_damage,
+        latest_session_data,
+        latest_tyre_sets,
+    )
 
+    print()
+    print("----------------------------------------------------")
+    print("RACE ENGINEER")
+    print("----------------------------------------------------")
+
+    has_messages = False
+
+    for category, messages in engineer_messages.items():
+        for message in messages:
+            if message != "--":
+                print(f"{message}")
+                has_messages = True
+
+    if not has_messages:
+        print("- All systems stable")
 
 
 
