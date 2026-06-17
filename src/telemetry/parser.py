@@ -389,6 +389,9 @@ class SessionData:
     session_duration: int
     pit_speed_limit: int
     safety_car_status: int
+    weather_forecast_samples: list
+    forecast_accuracy: int
+    
                        
 SESSION_DATA_FORMAT = "<BbbBHBbBHHBBBBBB" # "<BbbBHBbBHBBBBBBBHBB"
 SESSION_DATA_SIZE = struct.calcsize(SESSION_DATA_FORMAT)
@@ -417,6 +420,66 @@ def parse_session_data(data):
     else:
         safety_car_status = struct.unpack_from("<B", data, safety_car_offset)[0]
 
+        network_game_offset = safety_car_offset + 1
+        num_weather_samples_offset = network_game_offset + 1
+
+    if len(data) < num_weather_samples_offset + 1:
+        num_weather_forecast_samples = 0
+    else:
+        num_weather_forecast_samples = struct.unpack_from(
+            "<B",
+            data,
+            num_weather_samples_offset
+        )[0]
+
+    weather_forecast_samples = []
+
+    weather_samples_start = num_weather_samples_offset + 1
+
+    samples_to_parse = min(
+        num_weather_forecast_samples,
+        MAX_WEATHER_FORECAST_SAMPLES
+    )
+
+    for i in range(samples_to_parse):
+        offset = weather_samples_start + (i * WEATHER_FORECAST_SAMPLE_SIZE)
+
+        if len(data) < offset + WEATHER_FORECAST_SAMPLE_SIZE:
+            break
+
+        sample_values = struct.unpack_from(
+            WEATHER_FORECAST_SAMPLE_FORMAT,
+            data,
+            offset
+        )
+
+        weather_forecast_samples.append(
+            WeatherForecastSample(
+                session_type=sample_values[0],
+                time_offset=sample_values[1],
+                weather=sample_values[2],
+                track_temperature=sample_values[3],
+                track_temperature_change=sample_values[4],
+                air_temperature=sample_values[5],
+                air_temperature_change=sample_values[6],
+                rain_percentage=sample_values[7],
+            )
+        )
+
+    forecast_accuracy_offset = weather_samples_start + (
+        MAX_WEATHER_FORECAST_SAMPLES * WEATHER_FORECAST_SAMPLE_SIZE
+    )
+
+    if len(data) < forecast_accuracy_offset + 1:
+        forecast_accuracy = 0
+    else:
+        forecast_accuracy = struct.unpack_from(
+            "<B",
+            data,
+            forecast_accuracy_offset
+        )[0]    
+
+
     return SessionData(
         weather=values[0],
         track_temperature=values[1],
@@ -429,7 +492,24 @@ def parse_session_data(data):
         session_duration=values[10],
         pit_speed_limit=values[14],
         safety_car_status=safety_car_status,
+        weather_forecast_samples=weather_forecast_samples,
+        forecast_accuracy=forecast_accuracy,
     )
+
+@dataclass
+class WeatherForecastSample:
+    session_type: int
+    time_offset: int
+    weather: int
+    track_temperature: int
+    track_temperature_change: int
+    air_temperature: int
+    air_temperature_change: int
+    rain_percentage: int
+
+WEATHER_FORECAST_SAMPLE_FORMAT = "<BBBbbbbB"
+WEATHER_FORECAST_SAMPLE_SIZE = struct.calcsize(WEATHER_FORECAST_SAMPLE_FORMAT)
+MAX_WEATHER_FORECAST_SAMPLES = 64
 
 # ================================================================
 # Tyre Set Packet (Packet ID 12)

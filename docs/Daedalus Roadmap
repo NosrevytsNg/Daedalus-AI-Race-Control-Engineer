@@ -73,15 +73,17 @@ v0.6.0 — Tyre intelligence
 - Tyre wear trend
 - Suggested pit window
 
+v0.6.5 — Race engineer data readiness
+- Confirm Packet 10 final indexes
+- Add Packet 1 weather forecast sample parsing
+- Save Packet 3, 13, 15 for future development
+- Keep DRS availability from Packet 7
+- Keep DRS/ERS fault from Packet 10 as spec-supported
+- Keep Safety Car status from Packet 1
+
 Phase 6: Race Engineer Rules and Configurations
 v0.7.0 — Rule-based race engineer
-- Tyre wear warnings
-- Fuel warnings
-- ERS warnings
-- Damage alerts
-- Weather change alerts
-- Safety car alerts
-- DRS availability/fault alerts
+
 
 Phase 7: Strategy Advisor
 v0.8.0 — Strategy intelligence

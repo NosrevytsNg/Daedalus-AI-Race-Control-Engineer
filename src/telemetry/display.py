@@ -170,6 +170,24 @@ def format_percent(value):
 
     return f"{value:.0f}%"
 
+def format_forecast_accuracy(accuracy):
+    accuracy_map = {
+        0: "Perfect",
+        1: "Approximate",
+    }
+
+    return accuracy_map.get(accuracy, f"Unknown ({accuracy})")
+
+
+def get_nearest_weather_forecast(session_data):
+    if session_data is None:
+        return None
+
+    if not session_data.weather_forecast_samples:
+        return None
+
+    return session_data.weather_forecast_samples[0]
+
 # ==================================================================================================================================================================================================================================================================
 # LIVE Dashboard Function
 def display_live_telemetry(latest_telemetry, 
@@ -408,13 +426,15 @@ def display_live_telemetry(latest_telemetry,
     print("----------------------------------------------------")
     #print()
 
+    nearest_forecast = get_nearest_weather_forecast(latest_session_data)
+
     if latest_session_data is not None:
         print(f"Session:     {format_session_type(latest_session_data.session_type)}")
         print(f"Weather:     {format_weather(latest_session_data.weather)}")
         print(f"Track Temp:  {latest_session_data.track_temperature}°C")
         print(f"Air Temp:    {latest_session_data.air_temperature}°C")
         print(f"Track Length:{latest_session_data.track_length} m")
-
+        print()
         if is_race_session(latest_session_data.session_type):
             print(f"Total Laps:  {latest_session_data.total_laps}")
         elif is_timed_session(latest_session_data.session_type):
@@ -423,6 +443,19 @@ def display_live_telemetry(latest_telemetry,
             print("Time Left:   --")
 
         print(f"Safety Car:  {format_safety_car_status(latest_session_data.safety_car_status)}")
+        print()
+        if nearest_forecast is not None:
+            print(
+                f"Forecast:    {format_weather(nearest_forecast.weather)} "
+                f"in {nearest_forecast.time_offset} min"
+            )
+            print(f"Rain Chance: {nearest_forecast.rain_percentage}%")
+            print(
+                f"Forecast Acc:{format_forecast_accuracy(latest_session_data.forecast_accuracy)}"
+            )
+        else:
+            print("Forecast:    --")
+            print("Rain Chance: --")
 
     else:
         print("Session:     --")
@@ -465,7 +498,7 @@ def display_live_telemetry(latest_telemetry,
     else:
         print("Current Set: --")
         print("Available Sets: --")
-
+    print()
     print(f"Pit Advice:  {suggest_pit_window(latest_lap_data, latest_car_damage, latest_tyre_sets)}")
 
 
