@@ -83,7 +83,13 @@ v0.6.5 — Race engineer data readiness
 
 Phase 6: Race Engineer Rules and Configurations
 v0.7.0 — Rule-based race engineer
-
+- Tyre wear warnings (v0.7.1)
+- Fuel warnings (v0.7.2)
+- ERS warnings (v0.7.3)
+- Damage alerts (v0.7.4)
+- Weather change alerts (v0.7.5)
+- Safety car alerts (v0.7.6)
+- DRS availability/fault alerts (v0.7.7)
 
 Phase 7: Strategy Advisor
 v0.8.0 — Strategy intelligence
