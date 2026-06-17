@@ -6,9 +6,19 @@ def suggest_pit_window(latest_lap_data, latest_car_damage, latest_tyre_sets):
 
     if latest_car_damage is not None:
         max_tyre_damage = max(latest_car_damage.tyre_damage)
+        max_front_wing_damage = max(
+            latest_car_damage.front_left_wing_damage,
+            latest_car_damage.front_right_wing_damage,
+        )
 
         if max_tyre_damage >= 80:
-            return "BOX NOW - tyre damage critical"
+            return "BOX BOX - tyre damage critical"
+        
+        if max_front_wing_damage >= 70:
+            return "BOX BOX - severe front wing damage"
+        
+        if max_front_wing_damage >= 30:
+            return "BOX SOON - your front wing is damage"
 
     if fitted.wear >= 70:
         return "BOX SOON - tyre wear high"
@@ -209,6 +219,18 @@ def config_engineer_messages(
     latest_session_data,
     latest_tyre_sets,
 ):
+    pit_advice = suggest_pit_window(
+    None,
+    latest_car_damage,
+    latest_tyre_sets,
+    )
+
+    pit_messages = []
+
+    if pit_advice != "Stay out" and pit_advice != "--":
+        pit_messages.append(pit_advice)
+
+
     return {
         "tyre" : get_tyre_warnings(latest_car_damage, latest_tyre_sets),
         "fuel": get_fuel_warnings(latest_car_status),
@@ -216,7 +238,7 @@ def config_engineer_messages(
         "damage": get_damage_alerts(latest_car_damage),
         "weather": get_weather_alerts(latest_session_data),
         "safety_car": get_safety_car_alerts(latest_session_data),
-        "drs": get_drs_alerts(latest_car_status, latest_car_damage),   
-        "pit": [suggest_pit_window(None, latest_car_damage, latest_tyre_sets)],
+        "drs": get_drs_alerts(latest_car_status, latest_car_damage), 
+        "pit": pit_messages,  
     }
 

@@ -358,29 +358,9 @@ def display_live_telemetry(latest_telemetry,
     print("----------------------------------------------------")
     print("VEHICLE HEALTH")
     print("----------------------------------------------------")
-    print()
 
     if latest_car_damage is not None:
-        tyre_wear = latest_car_damage.tyre_wear
-        tyre_damage = latest_car_damage.tyre_damage
         brake_damage = latest_car_damage.brake_damage
-
-        print(
-            "Tyre Wear:   "
-            f"FL {format_percent(tyre_wear[2])} | "
-            f"FR {format_percent(tyre_wear[3])} | "
-            f"RL {format_percent(tyre_wear[0])} | "
-            f"RR {format_percent(tyre_wear[1])}"
-        )
-
-        print(
-            "Tyre Damage: "
-            f"FL {format_percent(tyre_damage[2])} | "
-            f"FR {format_percent(tyre_damage[3])} | "
-            f"RL {format_percent(tyre_damage[0])} | "
-            f"RR {format_percent(tyre_damage[1])}"
-        )
-
         print(
             "Brake Damage:"
             f" FL {format_percent(brake_damage[2])} | "
@@ -395,6 +375,7 @@ def display_live_telemetry(latest_telemetry,
             f"R {format_percent(latest_car_damage.front_right_wing_damage)}"
         )
         print(f"Rear Wing:   {format_percent(latest_car_damage.rear_wing_damage)}")
+        print()
         print(f"Floor:       {format_percent(latest_car_damage.floor_damage)}")
         print(f"Sidepod:     {format_percent(latest_car_damage.sidepod_damage)}")
         print(f"Diffuser:    {format_percent(latest_car_damage.diffuser_damage)}")
@@ -433,7 +414,7 @@ def display_live_telemetry(latest_telemetry,
         print(f"Weather:     {format_weather(latest_session_data.weather)}")
         print(f"Track Temp:  {latest_session_data.track_temperature}°C")
         print(f"Air Temp:    {latest_session_data.air_temperature}°C")
-        print(f"Track Length:{latest_session_data.track_length} m")
+        print(f"Total Dist:  {latest_session_data.track_length} m")
         print()
         if is_race_session(latest_session_data.session_type):
             print(f"Total Laps:  {latest_session_data.total_laps}")
@@ -451,7 +432,7 @@ def display_live_telemetry(latest_telemetry,
             )
             print(f"Rain Chance: {nearest_forecast.rain_percentage}%")
             print(
-                f"Forecast Acc:{format_forecast_accuracy(latest_session_data.forecast_accuracy)}"
+                f"Forecast:    {format_forecast_accuracy(latest_session_data.forecast_accuracy)}"
             )
         else:
             print("Forecast:    --")
@@ -462,7 +443,7 @@ def display_live_telemetry(latest_telemetry,
         print("Weather:     --")
         print("Track Temp:  --")
         print("Air Temp:    --")
-        print("Track Length:--")
+        print("Total Dist:  --")
         print("Time Left:   --")
         print("Safety Car:  --")
 
@@ -480,6 +461,7 @@ def display_live_telemetry(latest_telemetry,
         print(f"Set Wear:    {fitted.wear}%")
         print(f"Life Span:   {fitted.life_span} laps")
         print(f"Usable Life: {fitted.usable_life} laps")
+        print()
 
         if latest_car_damage is not None:
             tyre_wear = latest_car_damage.tyre_wear
@@ -542,7 +524,7 @@ def display_live_telemetry(latest_telemetry,
                 has_messages = True
 
     if not has_messages:
-        print("- All systems stable")
+        print("All systems stable")
 
 
 
