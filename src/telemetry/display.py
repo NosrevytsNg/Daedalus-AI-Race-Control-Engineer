@@ -1,7 +1,7 @@
 import os
 
 from src.telemetry.parser import format_time_ms
-from src.telemetry.race_engineer import config_engineer_messages, suggest_pit_window
+from src.telemetry.race_engineer import config_engineer_messages, suggest_pit_window, config_strategy_advice
 
 # Clear the console  
 def clear_terminal(): 
@@ -525,6 +525,25 @@ def display_live_telemetry(latest_telemetry,
 
     if not has_messages:
         print("All systems stable")
+
+    strategy_advice = config_strategy_advice(
+        latest_lap_data,
+        latest_car_status,
+        latest_car_damage,
+        latest_session_data,
+        latest_tyre_sets,
+    )
+
+    print()
+    print("----------------------------------------------------")
+    print("STRATEGY ADVISOR")
+    print("----------------------------------------------------")
+
+    if strategy_advice:
+        for message in strategy_advice:
+            print(f"- {message}")
+    else:
+        print("No strategic action required")
 
 
 
