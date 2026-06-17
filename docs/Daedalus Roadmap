@@ -73,7 +73,7 @@ v0.6.0 — Tyre intelligence
 - Tyre wear trend
 - Suggested pit window
 
-v0.6.5 — Race engineer data readiness
+v0.6.5 — Race engineer data readiness ✅
 - Confirm Packet 10 final indexes
 - Add Packet 1 weather forecast sample parsing
 - Save Packet 3, 13, 15 for future development
