@@ -81,8 +81,8 @@ v0.6.5 — Race engineer data readiness ✅
 - Keep DRS/ERS fault from Packet 10 as spec-supported
 - Keep Safety Car status from Packet 1
 
-Phase 6: Race Engineer Rules and Configurations
-v0.7.0 — Rule-based race engineer ✅
+Phase 6: Race Engineer Rules and Configurations ✅
+v0.7.0 — Rule-based race engineer 
 - Tyre wear warnings (v0.7.1)            ✅ Implemented / partially validated
 - Fuel warnings (v0.7.2)                 🟡 Implemented / unvalidated
 - ERS warnings (v0.7.3)                  🟡 Implemented / unvalidated
@@ -91,8 +91,8 @@ v0.7.0 — Rule-based race engineer ✅
 - Safety car alerts (v0.7.6)             🟡 Implemented / unvalidated
 - DRS availability/fault alerts (v0.7.7) 🟡 Implemented / unvalidated      
 
-Phase 7: Strategy Advisor
-v0.8.0 — Strategy intelligence
+Phase 7: Strategy Advisor ✅
+v0.8.0 — Strategy intelligence 
 - Pit stop timing
 - Tyre choice recommendation
 - Undercut/overcut logic
