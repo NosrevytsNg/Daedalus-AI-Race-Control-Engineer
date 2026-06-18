@@ -101,13 +101,15 @@ v0.8.0 — Strategy intelligence
 - Rain/intermediate/wet tyre calls       ✅ Implemented / validated
 
 Phase 8: Race Engineer/Analyst
-v0.9.0 — Performance analysis + Message Priority System (Critical, High, Medium, Low, Info)
+v0.9.0A — Performance Analysis
 - Sector comparison
 - Lap comparison
 - Time loss detection
 - Consistency analysis
 - Braking/throttle pattern review
 - “Where did I lose time?” feedback
+
+v0.9.0B — Message Priority System (Critical, High, Medium, Low, Info)
 
 v0.9.1 — Anti-Spam System
 
