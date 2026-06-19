@@ -1,7 +1,7 @@
 import os
 
 from src.telemetry.parser import format_time_ms
-from src.telemetry.race_engineer import config_engineer_messages, suggest_pit_window, config_strategy_advice
+from src.telemetry.race_engineer import config_engineer_messages, suggest_pit_window, config_strategy_advice, analyze_driver_performance
 
 # Clear the console  
 def clear_terminal(): 
@@ -221,7 +221,7 @@ def display_live_telemetry(latest_telemetry,
         print()
         print("No telemetry data available yet.")
 
-    #========================================================================================
+#========================================================================================
 
     # LIVE lap data
     if latest_lap_data is not None:
@@ -246,7 +246,7 @@ def display_live_telemetry(latest_telemetry,
         print()
         print("No lap data available yet.")
 
-    #========================================================================================
+#========================================================================================
 
     # LIVE session history data (sector records)
     
@@ -305,7 +305,7 @@ def display_live_telemetry(latest_telemetry,
     current_s2 = format_time_ms_with_placeholder(current_s2)
     current_s3 = format_time_ms_with_placeholder(current_s3)
 
-    #========================================================================================
+#========================================================================================
 
     # Phase 1: Display sector times and deltas
     #print()
@@ -322,7 +322,7 @@ def display_live_telemetry(latest_telemetry,
     print(f"Previous Sector   {previous_s1:<10} {previous_s2:<10} {previous_s3:<10}")
     print(f"Delta             {delta_s1:<10} {delta_s2:<10} {delta_s3:<10}")    
 
-    #========================================================================================
+#========================================================================================
     
     print()
     print("----------------------------------------------------")
@@ -400,7 +400,7 @@ def display_live_telemetry(latest_telemetry,
         print("Gearbox:     --")
         print("Engine:      --")
 
-    #========================================================================================
+#========================================================================================
     print()
     print("----------------------------------------------------")
     print("SESSION")
@@ -447,7 +447,7 @@ def display_live_telemetry(latest_telemetry,
         print("Time Left:   --")
         print("Safety Car:  --")
 
-        #========================================================================================
+#========================================================================================
     print()
     print("----------------------------------------------------")
     print("TYRE INTELLIGENCE")
@@ -544,8 +544,24 @@ def display_live_telemetry(latest_telemetry,
             print(f"- {message}")
     else:
         print("No strategic action required")
+        
+        
+#========================================================================================
+    performance_analysis = analyze_driver_performance(
+        latest_lap_data,
+        latest_session_history,
+    )
 
+    print()
+    print("----------------------------------------------------")
+    print("PERFORMANCE ANALYSIS")
+    print("----------------------------------------------------")
 
+    if performance_analysis["messages"]:
+        for message in performance_analysis["messages"]:
+            print(f"- {message}")
+    else:
+        print("Not enough lap data yet")
 
 
 
