@@ -538,3 +538,56 @@ def analyze_driver_performance(
                 )
 
 # Sector Comparison (Current vs Best)    
+
+    sector_data = {
+        "S1": {
+            "current_sec": latest_lap_data.sector_1_time.ms,
+            "best_sec": latest_session_history.best_sector1_time.ms
+        },
+        "S2": {
+            "current_sec": latest_lap_data.sector_2_time.ms,
+            "best_sec": latest_session_history.best_sector2_time.ms
+        },
+    }
+
+    sector_deltas = {}
+
+    for sector_name, data in sector_data.items():
+        current_sec = data["current_sec"]
+        best_sec = data["best_sec"]
+
+        if current_sec is None or best_sec is None:
+            continue
+
+        if current_sec <= 0 or best_sec <= 0:
+            continue
+
+        sector_deltas[sector_name] = current_sec - best_sec
+
+    if sector_deltas:
+        worst_sec = max(
+            sector_deltas,
+            key=sector_deltas.get,
+        ) 
+
+        worst_sec_delta = sector_deltas[worst_sec]
+
+        analysis["sector_comparison"] = {
+            "sector_deltas": sector_deltas,
+            "worst_sec": worst_sec,
+            "worst_sec_delta": worst_sec_delta
+        }   
+
+        if worst_sec_delta > 0:
+            analysis["messages"].append(
+                f"Most time lost in {worst_sec}: "
+                f"+{worst_sec_delta / 1000:.3f}s."
+            )
+
+        if worst_sec_delta < 0:
+            analysis["messages"].append(
+                f"Strongest sector is {worst_sec}: "
+                f"+{worst_sec_delta / 1000:.3f}s faster."
+            ) 
+
+    return analysis           
