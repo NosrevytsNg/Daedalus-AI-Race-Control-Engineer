@@ -496,3 +496,45 @@ def get_undercut_overcut_advice(
         )
 
     return advice
+
+def analyze_driver_performance(
+        latest_lap_data,
+        latest_session_history,
+):
+    analysis = {"lap_comparison": None, 
+                "sector_comparison": None, 
+                "messages": []}
+        
+    if latest_lap_data is None and latest_session_history is None:
+        return analysis
+    
+# Lap Comparison (Last vs Best)
+    last_lap = latest_lap_data.lap_lap_time_ms
+    best_lap = latest_session_history.best_lap_time_ms
+
+    if last_lap is not None and best_lap is not None:
+        if last_lap > 0 and best_lap > 0:
+            lap_delta = last_lap - best_lap
+
+            analysis["lap_comparison"] = {
+                "last_lap": last_lap,
+                "best_lap": best_lap,
+                "lap_delta": lap_delta,
+            }
+
+            if lap_delta > 0:
+                analysis["messages"].append(
+                    f"Last lap was {lap_delta / 1000:.3f}s slower than your best"
+                )
+
+            elif lap_delta < 0:
+                analysis["messages"].append(
+                    f"Last lap was {lap_delta / 1000:.3f}s faster than your best"
+                )
+
+            else:
+                analysis["messages"].append(
+                    f"👍"
+                )
+
+# Sector Comparison (Current vs Best)    
