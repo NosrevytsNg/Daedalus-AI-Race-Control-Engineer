@@ -515,15 +515,24 @@ def display_live_telemetry(latest_telemetry,
     print("RACE ENGINEER")
     print("----------------------------------------------------")
 
-    has_messages = False
+    # has_messages = False
 
-    for category, messages in engineer_messages.items():
-        for message in messages:
-            if message != "--":
-                print(f"{message}")
-                has_messages = True
+    # for category, messages in engineer_messages.items():
+    #     for message in messages:
+    #         if message != "--":
+    #             print(f"{message}")
+    #             has_messages = True
 
-    if not has_messages:
+    # if not has_messages:
+    #     print("All systems stable")
+
+    if engineer_messages:
+        for message in engineer_messages:
+            print(
+                f"[{message['priority']}] "
+                f"{message['text']}"
+            )
+    else:
         print("All systems stable")
 
     strategy_advice = config_strategy_advice(
