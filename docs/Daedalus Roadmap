@@ -119,7 +119,7 @@ v0.9.0B — Telemetry Logger (Storage) ✅ Implemented / validated
 - Tyre Wear
 - Fuel
 
-v0.9.0C — Message Priority System (Critical, High, Medium, Low, Info) 🔴 Unimplemented / unvalidated -> current
+v0.9.0C — Message Priority System (Critical, High, Medium, Low, Info) 🟡 Implemented / partially validated
 
 v0.9.1 — Anti-Spam & Message De-Duplication (Delivery Manager) 🔴 Unimplemented / unvalidated
 
