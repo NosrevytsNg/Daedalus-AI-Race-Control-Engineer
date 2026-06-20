@@ -114,14 +114,15 @@ def start_listener():
                         previous_lap_num = new_lap_data.current_lap_num
                         latest_lap_data = new_lap_data
 
-                        telemetry_logger.log_lap_capture(
-                            current_session_uid,
-                            latest_lap_data,
-                            latest_telemetry,
-                            latest_car_status,
-                            latest_car_damage,
-                            latest_completed_lap_sectors,
-                        )   
+                        if latest_completed_lap_sectors is not None:        
+                            telemetry_logger.log_lap_capture(
+                                current_session_uid,
+                                latest_lap_data,
+                                latest_telemetry,
+                                latest_car_status,
+                                latest_car_damage,
+                                latest_completed_lap_sectors,
+                            )   
                          
                     #print(f"Completed Lap {latest_completed_lap_sectors.lap_num} Sector Times: S1={format_time_ms(sector_1)}, S2={format_time_ms(sector_2)}, S3={format_time_ms(sector_3)}")
     

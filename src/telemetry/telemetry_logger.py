@@ -14,10 +14,9 @@ class TelemetryLogger:
         )
 
         self.log_dir = os.path.join(PROJECT_ROOT, "logs")
-
-
         self.session_file = None
         self.latest_logged_lap = None
+        self.current_session_uid = None
 
         os.makedirs(self.log_dir, exist_ok=True)
 
@@ -30,17 +29,16 @@ class TelemetryLogger:
             writer.writerow([
                 "timestamp",
                 "session_uid",
-                "lap_num",
                 "last_lap_num",
                 "current_lap_num",
-                "sector_1_ms"
+                "sector_1_ms",
                 "sector_2_ms",
                 "sector_3_ms",
                 "speed",
                 "throttle",
                 "brake",
                 "ers_energy_storage",
-                "fuel_remaining_laps"
+                "fuel_remaining_laps",
                 "fuel_in_tank",
                 "tyre_wear_rl",
                 "tyre_wear_rr",
@@ -57,8 +55,10 @@ class TelemetryLogger:
             latest_car_damage,
             latest_completed_lap_sectors,
     ):
-        if self.session_file is None:
+        if self.session_file is None or self.current_session_uid != session_uid:
             self.start_session(session_uid)
+            self.current_session_uid = session_uid
+            self.latest_logged_lap = None
 
         if latest_lap_data is None:
             return
@@ -68,7 +68,7 @@ class TelemetryLogger:
         if self.latest_logged_lap == current_lap_num:
             return
         
-        self.latest_logged_lap == current_lap_num
+        self.latest_logged_lap = current_lap_num
 
         sector_3 = None
         if latest_completed_lap_sectors is not None:
