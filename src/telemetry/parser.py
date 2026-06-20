@@ -226,7 +226,7 @@ class CarStatus:
     actual_tyre_compound: int
     visual_tyre_compound: int
     tyres_age_laps: int
-    ers_store_energy: float
+    ers_energy_storage: float
     ers_deploy_mode: int
     pit_limiter_status: bool 
 
@@ -254,7 +254,7 @@ def parse_car_status(data, player_car_index):
         actual_tyre_compound=values[13],
         visual_tyre_compound=values[14],
         tyres_age_laps=values[15],
-        ers_store_energy=values[19],
+        ers_energy_storage=values[19],
         ers_deploy_mode=values[20],
     )
 

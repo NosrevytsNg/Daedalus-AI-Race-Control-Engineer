@@ -9,6 +9,7 @@ from src.telemetry.parser import (parse_header, parse_car_telemetry, parse_lap_d
 from src.telemetry.packets import (PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET_ID_LAP_DATA, 
                                    PACKET_ID_SESSION_HISTORY, PACKET_ID_CAR_STATUS, PACKET_ID_SESSION, 
                                    PACKET_ID_CAR_DAMAGE,PACKET_ID_TYRE_SETS,)
+from src.telemetry.telemetry_logger import (TelemetryLogger)
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 20777
@@ -53,6 +54,10 @@ def start_listener():
     last_display_update = 0
     DISPLAY_REFRESH_RATE = 0.25  # seconds
 
+    telemetry_logger = TelemetryLogger()
+    current_session_uid = None
+    
+
     try:
         while True:
             try:
@@ -64,6 +69,8 @@ def start_listener():
                 if header is None:
                     print(f"[{timestamp}] Invalid packet received from {address[0]}:{address[1]}")
                     continue
+
+                current_session_uid = header["session_uid"]
 
                 packet_id = header["packet_id"]
                 
@@ -105,9 +112,17 @@ def start_listener():
                                 )
 
                         previous_lap_num = new_lap_data.current_lap_num
-                        latest_lap_data = new_lap_data   
-                        
-                        
+                        latest_lap_data = new_lap_data
+
+                        telemetry_logger.log_lap_capture(
+                            current_session_uid,
+                            latest_lap_data,
+                            latest_telemetry,
+                            latest_car_status,
+                            latest_car_damage,
+                            latest_completed_lap_sectors,
+                        )   
+                         
                     #print(f"Completed Lap {latest_completed_lap_sectors.lap_num} Sector Times: S1={format_time_ms(sector_1)}, S2={format_time_ms(sector_2)}, S3={format_time_ms(sector_3)}")
     
                 elif packet_id == PACKET_ID_SESSION_HISTORY:

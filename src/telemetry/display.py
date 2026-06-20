@@ -70,11 +70,11 @@ def format_ers_mode(mode):
     return modes.get(mode, f"Unknown ({mode})")
 
 # Assign function for ERS storage energy level
-def format_ers_percentage(ers_store_energy):
-    if ers_store_energy is None:
+def format_ers_percentage(ers_energy_storage):
+    if ers_energy_storage is None:
         return "--"
 
-    ers_percentage = (ers_store_energy / 4_000_000) * 100
+    ers_percentage = (ers_energy_storage / 4_000_000) * 100
     return f"{ers_percentage:.0f}%"
 
 def format_weather(weather):
@@ -333,7 +333,7 @@ def display_live_telemetry(latest_telemetry,
         print(f"Fuel:        {latest_car_status.fuel_remaining_laps:+.2f} laps")
         print(f"Fuel Tank:   {latest_car_status.fuel_in_tank:.2f} kg")
         
-        print(f"ERS:         {format_ers_percentage(latest_car_status.ers_store_energy)}")
+        print(f"ERS:         {format_ers_percentage(latest_car_status.ers_energy_storage)}")
         print(f"ERS Mode:    {format_ers_mode(latest_car_status.ers_deploy_mode)}")
         
         print(f"DRS Allowed: {'Yes' if latest_car_status.drs_allowed else 'No'}")

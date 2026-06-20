@@ -89,7 +89,7 @@ def get_ers_warnings(latest_car_status):
         return warnings
 
     ers_pct = (
-        latest_car_status.ers_store_energy
+        latest_car_status.ers_energy_storage
         / 4_000_000
     ) * 100
 
@@ -417,7 +417,7 @@ def get_ers_deployment_advice(
         return advice
 
     ers_pct = (
-        latest_car_status.ers_store_energy
+        latest_car_status.ers_energy_storage
         / 4_000_000
     ) * 100
 
@@ -505,11 +505,12 @@ def analyze_driver_performance(
                 "sector_comparison": None, 
                 "messages": []}
         
-    if latest_lap_data is None and latest_session_history is None:
+    if latest_lap_data is None or latest_session_history is None:
+        analysis["messages"].append("Not enough data yet.")
         return analysis
     
 # Lap Comparison (Last vs Best)
-    last_lap = latest_lap_data.lap_lap_time_ms
+    last_lap = latest_lap_data.last_lap_time_ms
     best_lap = latest_session_history.best_lap_time_ms
 
     if last_lap is not None and best_lap is not None:
@@ -541,12 +542,12 @@ def analyze_driver_performance(
 
     sector_data = {
         "S1": {
-            "current_sec": latest_lap_data.sector_1_time.ms,
-            "best_sec": latest_session_history.best_sector1_time.ms
+            "current_sec": latest_lap_data.sector_1_time_ms,
+            "best_sec": latest_session_history.best_sector1_time_ms
         },
         "S2": {
-            "current_sec": latest_lap_data.sector_2_time.ms,
-            "best_sec": latest_session_history.best_sector2_time.ms
+            "current_sec": latest_lap_data.sector_2_time_ms,
+            "best_sec": latest_session_history.best_sector2_time_ms
         },
     }
 
