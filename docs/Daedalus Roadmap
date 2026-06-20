@@ -121,7 +121,7 @@ v0.9.0B — Telemetry Logger (Storage) ✅ Implemented / validated
 
 v0.9.0C — Message Priority System (Critical, High, Medium, Low, Info) 🟡 Implemented / partially validated
 
-v0.9.1 — Anti-Spam & Message De-Duplication (Delivery Manager) 🔴 Unimplemented / unvalidated
+v0.9.1 — Message Delivery Manager 🔴 Unimplemented / unvalidated
 
 v0.9.2 — Engineer Personality 🔴 Unimplemented / unvalidated
 
