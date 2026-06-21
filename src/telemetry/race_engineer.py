@@ -1,3 +1,4 @@
+import random
 from collections import deque
 
 recent_valid_laps = deque(maxlen=5)
@@ -24,6 +25,333 @@ def sort_engineer_messages(messages):
         messages,
         key=lambda message: PRIORITY_ORDER.get(message["priority"], 99)
     )
+
+# ======================================================================================================
+# v0.9.1B - Message Delivery Manager
+# Purpose:
+# - Keep all engineer messages internally.
+# - Group related messages by situation/context.
+# - Deliver only one radio-style message per active situation.
+# - Rotate phrase variants so the engineer does not sound robotic.
+
+active_delivery_groups = set()
+last_phrase_variant = {}
+
+
+DELIVERY_CONTEXT_GROUPS = {
+    # Front wing damage
+    "front_wing_critical": "front_wing_critical",
+    "pit_front_wing_critical": "front_wing_critical",
+
+    "front_wing_damage": "front_wing_damage",
+    "pit_front_wing_damage": "front_wing_damage",
+
+    # Tyre damage
+    "tyre_damage_critical": "tyre_damage_critical",
+    "pit_tyre_critical": "tyre_damage_critical",
+
+    "tyre_damage_detected": "tyre_damage_detected",
+
+    # Tyre wear
+    "tyre_wear_critical": "tyre_wear_critical",
+    "pit_tyre_wear": "tyre_wear_critical",
+
+    "tyre_wear_high": "tyre_wear_high",
+
+    # Fuel
+    "fuel_critical": "fuel_critical",
+    "fuel_marginal": "fuel_marginal",
+
+    # ERS
+    "ers_critical": "ers_critical",
+    "ers_low": "ers_low",
+
+    # Damage
+    "floor_damage_low": "floor_damage_low,",
+    "floor_damage_medium": "floor_damage_medium",
+    "floor_damage_high": "floor_damage_high",
+    "floor_damage_critical": "floor_damage_critical",
+    
+    "sidepod_damage_low": "sidepod_damage_low,",
+    "sidepod_damage_medium": "sidepod_damage_medium",
+    "sidepod_damage_high": "sidepod_damage_high",
+    "sidepod_damage_critical": "sidepod_damage_critical",
+
+    "diffuser_damage_low": "diffuser_damage_low,",
+    "diffuser_damage_medium": "diffuser_damage_medium",
+    "diffuser_damage_high": "diffuser_damage_high",
+    "diffuser_damage_critical": "diffuser_damage_critical",
+
+    # DRS
+    "drs_fault": "drs_fault",
+    "drs_available": "drs_available",
+
+    # Weather
+    "rain_expected": "rain_expected",
+    "rain_possible": "rain_possible",
+
+    # Safety car
+    "safety_car": "safety_car",
+    "virtual_safety_car": "virtual_safety_car",
+    "formation_lap": "formation_lap",
+}
+
+
+RADIO_PHRASES = {
+    "front_wing_critical": [
+        "Box now. Severe front wing damage.",
+        "Severe front wing damage. Box this lap.",
+        "You've got major front wing damage. We recommend boxing.",
+        "Front wing damage is severe. Pit this lap.",
+    ],
+
+    "front_wing_damage": [
+        "Front wing damage detected. Manage the car.",
+        "You've picked up front wing damage. Be careful on entry.",
+        "Front wing has damage. Expect reduced front grip.",
+    ],
+
+    "tyre_damage_critical": [
+        "Critical tyre damage. Box now.",
+        "Tyre damage is critical. We need to pit.",
+        "Box this lap. Tyre condition is critical.",
+        "Tyre damage is too high. Bring it in.",
+    ],
+
+    "tyre_damage_detected": [
+        "Tyre damage detected. Keep an eye on the car.",
+        "You've got tyre damage. Avoid heavy kerbs.",
+        "Tyre damage is building. Manage the load.",
+    ],
+
+    "tyre_wear_critical": [
+        "Tyres are near the end of life. Prepare to box.",
+        "Tyre wear is high. We should consider boxing soon.",
+        "The tyres are dropping off. Pit window is approaching.",
+        "Tyres are struggling now. Be ready for the stop.",
+    ],
+
+    "tyre_wear_high": [
+        "Tyre wear is getting high. Manage the tyres.",
+        "The tyres are starting to wear. Keep them alive.",
+        "Tyre wear is building. Smooth inputs now.",
+    ],
+
+    "fuel_critical": [
+        "Fuel is critical. Start saving immediately.",
+        "We are short on fuel. Lift and coast now.",
+        "Fuel target is critical. We need saving every lap.",
+        "We're not going to make it at this consumption. Save fuel now.",
+    ],
+
+    "fuel_marginal": [
+        "Fuel is looking tight. Short shift and save where you can.",
+        "Fuel is marginal. Start some lift and coast.",
+        "We need a bit of fuel saving. Manage consumption.",
+        "Fuel is close to the limit. Save where possible.",
+    ],
+
+    "ers_critical": [
+        "ERS is critically low. Harvest this lap.",
+        "Battery is very low. We need to recover energy.",
+        "ERS is nearly empty. Reduce deployment.",
+    ],
+
+    "ers_low": [
+        "ERS is low. Manage deployment.",
+        "Battery is low. Harvest where you can.",
+        "ERS is running low. Be selective with deployment.",
+    ],
+
+    "floor_damage_low": [
+        "Minor floor damage detected.",
+        "Small amount of floor damage showing.",
+        "Light floor damage. Keep monitoring the car.",
+    ],
+
+    "floor_damage_medium": [
+        "Floor damage detected. Expect some loss of downforce.",
+        "You've picked up floor damage. Manage the high-speed corners.",
+        "Floor has taken some damage. The car may feel less stable.",
+    ],
+
+    "floor_damage_high": [
+        "Major floor damage. Expect a significant loss of grip.",
+        "Floor damage is high. Be careful in fast corners.",
+        "The floor is badly damaged. The car will be unstable at speed.",
+    ],
+
+    "floor_damage_critical": [
+        "Critical floor damage. The car is heavily compromised.",
+        "Severe floor damage. Expect major loss of downforce.",
+        "The floor damage is critical. Focus on keeping the car under control.",
+    ],
+
+    "sidepod_damage_low": [
+        "Minor sidepod damage detected.",
+        "Small amount of sidepod damage showing.",
+        "Light sidepod damage. Keep monitoring the car.",
+    ],
+
+    "sidepod_damage_medium": [
+        "Sidepod damage detected.",
+        "You've picked up sidepod damage. Keep monitoring the balance.",
+        "Sidepod has taken some damage. Watch the car behaviour.",
+    ],
+
+    "sidepod_damage_high": [
+        "Major sidepod damage. The car balance may be affected.",
+        "Sidepod damage is high. Manage the car carefully.",
+        "The sidepod has heavy damage. Watch for instability.",
+    ],
+
+    "sidepod_damage_critical": [
+        "Critical sidepod damage. The car is heavily compromised.",
+        "Severe sidepod damage. Manage the car and avoid further contact.",
+        "Sidepod damage is critical. Keep the car under control.",
+    ],
+
+    "diffuser_damage_low": [
+        "Minor diffuser damage detected.",
+        "Small amount of diffuser damage showing.",
+        "Light diffuser damage. Watch rear stability.",
+    ],
+
+    "diffuser_damage_medium": [
+        "Diffuser damage detected. Rear grip may be affected.",
+        "You've picked up diffuser damage. Be careful on traction.",
+        "Diffuser has taken some damage. Watch rear stability.",
+    ],
+
+    "diffuser_damage_high": [
+        "Major diffuser damage. Expect reduced rear stability.",
+        "Diffuser damage is high. Be careful on throttle.",
+        "The diffuser is badly damaged. Rear grip will be compromised.",
+    ],
+
+    "diffuser_damage_critical": [
+        "Critical diffuser damage. Rear stability is heavily compromised.",
+        "Severe diffuser damage. Be very careful on traction.",
+        "Diffuser damage is critical. Manage the rear of the car.",
+    ],
+
+    "drs_fault": [
+        "DRS fault detected.",
+        "DRS issue confirmed. You may not have rear wing activation.",
+        "We have a DRS fault. Overtaking will be harder.",
+    ],
+
+    "drs_available": [
+        "DRS available.",
+        "DRS is enabled.",
+        "You have DRS this lap.",
+    ],
+
+    "rain_expected": [
+        "Rain is expected soon. Prepare for changing conditions.",
+        "Rain is coming. Be ready for the crossover.",
+        "We are expecting rain soon. Keep the tyres in mind.",
+    ],
+
+    "rain_possible": [
+        "Rain is possible later. Keep an eye on the forecast.",
+        "There is a chance of rain later.",
+        "Weather may change later. We'll keep monitoring.",
+    ],
+
+    "safety_car": [
+        "Safety car deployed. Stay alert and manage delta.",
+        "Safety car is out. Watch the delta.",
+        "Full safety car deployed. Reduce pace and manage temperatures.",
+    ],
+
+    "virtual_safety_car": [
+        "Virtual safety car deployed. Watch the delta.",
+        "VSC is out. Stay positive on the delta.",
+        "Virtual safety car. Manage the pace carefully.",
+    ],
+
+    "formation_lap": [
+        "Formation lap. Build tyre temperature.",
+        "Formation lap underway. Warm the tyres and brakes.",
+        "Formation lap. Prepare the car for the start.",
+    ],
+}
+
+
+def get_delivery_group(message):
+    context = message.get("context")
+    return DELIVERY_CONTEXT_GROUPS.get(context, context)
+
+
+def select_radio_phrase(delivery_group, fallback_text):
+    phrases = RADIO_PHRASES.get(delivery_group)
+
+    if not phrases:
+        return fallback_text
+
+    if len(phrases) == 1:
+        return phrases[0]
+
+    previous_index = last_phrase_variant.get(delivery_group)
+
+    available_indexes = [
+        index for index in range(len(phrases))
+        if index != previous_index
+    ]
+
+    selected_index = random.choice(available_indexes)
+
+    last_phrase_variant[delivery_group] = selected_index
+
+    return phrases[selected_index]
+
+
+def prepare_delivery_messages(engineer_messages):
+    global active_delivery_groups
+
+    delivery_messages = []
+    current_delivery_groups = set()
+
+    for message in engineer_messages:
+        delivery_group = get_delivery_group(message)
+
+        if delivery_group is None:
+            continue
+
+        current_delivery_groups.add(delivery_group)
+
+        # Option D behaviour:
+        # Once a situation has been delivered, do not deliver it again
+        # until the condition disappears and later returns.
+        if delivery_group in active_delivery_groups:
+            continue
+
+        radio_text = select_radio_phrase(
+            delivery_group,
+            message["text"]
+        )
+
+        delivery_messages.append(
+            {
+                "priority": message["priority"],
+                "category": message["category"],
+                "context": message["context"],
+                "delivery_group": delivery_group,
+                "text": radio_text,
+                "source_text": message["text"],
+            }
+        )
+
+        active_delivery_groups.add(delivery_group)
+
+    # If a condition disappears, remove it from active tracking.
+    # This allows it to be delivered again if it returns later.
+    active_delivery_groups = active_delivery_groups.intersection(
+        current_delivery_groups
+    )
+
+    return sort_engineer_messages(delivery_messages)
 
 def suggest_pit_window(latest_lap_data, latest_car_damage, latest_tyre_sets):
     if latest_tyre_sets is None or latest_tyre_sets.fitted_set is None:
@@ -131,6 +459,44 @@ def get_ers_warnings(latest_car_status):
         )
 
     return warnings
+
+def create_aero_damage_message(component_name, damage_value, context_prefix):
+    if damage_value is None:
+        return None
+
+    if damage_value >= 80:
+        return make_engineer_message(
+            "CRITICAL",
+            "damage",
+            f"{context_prefix}_critical",
+            f"Critical {component_name} damage ({damage_value:.0f}%)"
+        )
+
+    if damage_value >= 50:
+        return make_engineer_message(
+            "HIGH",
+            "damage",
+            f"{context_prefix}_high",
+            f"Major {component_name} damage ({damage_value:.0f}%)"
+        )
+
+    if damage_value >= 20:
+        return make_engineer_message(
+            "MEDIUM",
+            "damage",
+            f"{context_prefix}_medium",
+            f"{component_name.capitalize()} damage ({damage_value:.0f}%)"
+        )
+    
+    if damage_value >= 1:
+        return make_engineer_message(
+            "LOW",
+            "damage",
+            f"{context_prefix}_low",
+            f"{component_name.capitalize()} damage ({damage_value:.0f}%)"
+        )
+
+    return None
 
 
 def get_damage_alerts(latest_car_damage):
@@ -400,35 +766,27 @@ def config_engineer_messages(
                 )
             )
 
-        if latest_car_damage.floor_damage > 20:
-            messages.append(
-                make_engineer_message(
-                    "MEDIUM",
-                    "damage",
-                    "floor_damage",
-                    "Floor damage"
-                )
-            )
+        aero_damage_messages = [
+            create_aero_damage_message(
+                "floor",
+                latest_car_damage.floor_damage,
+                "floor_damage"
+            ),
+            create_aero_damage_message(
+                "sidepod",
+                latest_car_damage.sidepod_damage,
+                "sidepod_damage"
+            ),
+            create_aero_damage_message(
+                "diffuser",
+                latest_car_damage.diffuser_damage,
+                "diffuser_damage"
+            ),
+        ]
 
-        if latest_car_damage.sidepod_damage > 20:
-            messages.append(
-                make_engineer_message(
-                    "MEDIUM",
-                    "damage",
-                    "sidepod_damage",
-                    "Sidepod damage"
-                )
-            )
-
-        if latest_car_damage.diffuser_damage > 20:
-            messages.append(
-                make_engineer_message(
-                    "MEDIUM",
-                    "damage",
-                    "diffuser_damage",
-                    "Diffuser damage"
-                )
-            )
+        for aero_message in aero_damage_messages:
+            if aero_message is not None:
+                messages.append(aero_message)
 
         if latest_car_damage.drs_fault:
             messages.append(
@@ -535,6 +893,7 @@ def config_engineer_messages(
 
         messages.append(
             make_engineer_message(
+                context,
                 priority,
                 "pit",
                 pit_advice

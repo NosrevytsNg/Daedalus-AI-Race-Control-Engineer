@@ -1,7 +1,7 @@
 import os
 
 from src.telemetry.parser import format_time_ms
-from src.telemetry.race_engineer import config_engineer_messages, suggest_pit_window, config_strategy_advice, analyze_driver_performance
+from src.telemetry.race_engineer import config_engineer_messages, suggest_pit_window, config_strategy_advice, analyze_driver_performance, prepare_delivery_messages
 
 # Clear the console  
 def clear_terminal(): 
@@ -535,6 +535,23 @@ def display_live_telemetry(latest_telemetry,
             )
     else:
         print("All systems stable")
+
+    delivery_messages = prepare_delivery_messages(engineer_messages)
+
+    print()
+    print("----------------------------------------------------")
+    print("RADIO DELIVERY DEBUG")
+    print("----------------------------------------------------")
+
+    if delivery_messages:
+        for message in delivery_messages:
+            print(
+                f"[{message['priority']}]"
+                f"({message['delivery_group']})"
+                f"{message['text']}"
+            )
+    else:
+        print("No new radio messages")        
 
     strategy_advice = config_strategy_advice(
         latest_lap_data,
