@@ -11,10 +11,11 @@ PRIORITY_ORDER = {
     "INFO": 5,
 }
 
-def make_engineer_message(priority, category, text):
+def make_engineer_message(priority, category, context, text):
     return {
         "priority": priority,
         "category": category,
+        "context": context,
         "text": text,
     }
 
@@ -286,6 +287,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "CRITICAL",
                     "tyre",
+                    "tyre_damage_critical",
                     "CRITICAL TYRE DAMAGE - BOX NOW"
                 )
             )
@@ -295,6 +297,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "HIGH",
                     "tyre",
+                    "tyre_damage_detected"
                     f"Tyre damage detected ({max_damage:.0f}%)"
                 )
             )
@@ -304,6 +307,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "HIGH",
                     "tyre",
+                    "tyre_wear_critical"
                     f"Tyres approaching end of life ({max_wear:.0f}%)"
                 )
             )
@@ -313,6 +317,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "MEDIUM",
                     "tyre",
+                    "tyre_damage_high",
                     f"Tyre wear high ({max_wear:.0f}%)"
                 )
             )
@@ -326,6 +331,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "CRITICAL",
                     "fuel",
+                    "fuel_critical",
                     "Fuel critical"
                 )
             )
@@ -335,6 +341,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "MEDIUM",
                     "fuel",
+                    "fuel_marginal",
                     "Fuel marginal"
                 )
             )
@@ -351,6 +358,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "HIGH",
                     "ers",
+                    "ers_critical",
                     "ERS critically low"
                 )
             )
@@ -360,6 +368,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "MEDIUM",
                     "ers",
+                    "ers_low",
                     "ERS low"
                 )
             )
@@ -376,6 +385,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "CRITICAL",
                     "damage",
+                    "front_wing_critical",
                     "Severe front wing damage - BOX NOW"
                 )
             )
@@ -385,6 +395,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "HIGH",
                     "damage",
+                    "front_wing_damage",
                     "Front wing damage"
                 )
             )
@@ -394,6 +405,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "MEDIUM",
                     "damage",
+                    "floor_damage",
                     "Floor damage"
                 )
             )
@@ -403,6 +415,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "MEDIUM",
                     "damage",
+                    "sidepod_damage",
                     "Sidepod damage"
                 )
             )
@@ -412,6 +425,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "MEDIUM",
                     "damage",
+                    "diffuser_damage",
                     "Diffuser damage"
                 )
             )
@@ -421,6 +435,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "HIGH",
                     "drs",
+                    "drs_fault",
                     "DRS fault"
                 )
             )
@@ -434,6 +449,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "MEDIUM",
                     "weather",
+                    "rain_expected",
                     f"Rain expected in {nearest.time_offset} min"
                 )
             )
@@ -443,6 +459,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "LOW",
                     "weather",
+                    "rain_possible",
                     f"Rain possible in {nearest.time_offset} min"
                 )
             )
@@ -456,6 +473,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "HIGH",
                     "safety_car",
+                    "safety_car",
                     "Safety Car deployed"
                 )
             )
@@ -465,6 +483,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "HIGH",
                     "safety_car",
+                    "virtual_safety_car",
                     "Virtual Safety Car"
                 )
             )
@@ -474,6 +493,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "INFO",
                     "safety_car",
+                    "formation_lap",
                     "Formation Lap"
                 )
             )
@@ -484,6 +504,7 @@ def config_engineer_messages(
             make_engineer_message(
                 "LOW",
                 "drs",
+                "drs_available",
                 "DRS available"
             )
         )
@@ -496,11 +517,20 @@ def config_engineer_messages(
     )
 
     if pit_advice not in ("--", "Stay out"):
-        if "BOX BOX" in pit_advice:
+        if "tyre damage critical" in pit_advice:
+            context = "pit_tyre_critical"
             priority = "CRITICAL"
-        elif "BOX SOON" in pit_advice:
+        elif "severe front wing damage" in pit_advice:
+            context = "pit_front_wing_critical"
+            priority = "CRITICAL"
+        elif "front wing" in pit_advice:
+            context = "pit_front_wing_damage"
+            priority = "HIGH"
+        elif "tyre wear" in pit_advice:
+            context = "pit_tyre_wear"
             priority = "HIGH"
         else:
+            context = "pit_window"
             priority = "MEDIUM"
 
         messages.append(

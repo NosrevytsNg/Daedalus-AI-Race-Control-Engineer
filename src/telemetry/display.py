@@ -530,6 +530,7 @@ def display_live_telemetry(latest_telemetry,
         for message in engineer_messages:
             print(
                 f"[{message['priority']}] "
+                f"({message['context']}) "
                 f"{message['text']}"
             )
     else:
