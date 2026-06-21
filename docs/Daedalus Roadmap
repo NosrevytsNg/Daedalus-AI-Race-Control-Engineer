@@ -120,6 +120,17 @@ v0.9.0B — Telemetry Logger (Storage) ✅ Implemented / validated
 - Fuel
 
 v0.9.0C — Message Priority System (Critical, High, Medium, Low, Info) 🟡 Implemented / partially validated
+  1. Knowledge Messages
+    Raw facts from race_engineer.py
+    Keep everything.
+
+  2. Delivery Manager
+    Decides what is worth saying now.
+    Groups related messages.
+    Chooses one phrasing variation.
+
+  3. Voice / Radio Output
+    Eventually speaks the selected message.
 
 v0.9.1 — Message Delivery Manager 🔴 Unimplemented / unvalidated -> current
 
