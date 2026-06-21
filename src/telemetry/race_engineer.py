@@ -876,26 +876,31 @@ def config_engineer_messages(
 
     if pit_advice not in ("--", "Stay out"):
         if "tyre damage critical" in pit_advice:
+            priority = "CRITICAL"
             context = "pit_tyre_critical"
-            priority = "CRITICAL"
+            
         elif "severe front wing damage" in pit_advice:
-            context = "pit_front_wing_critical"
             priority = "CRITICAL"
+            context = "pit_front_wing_critical"
+            
         elif "front wing" in pit_advice:
+            priority = "HIGH"
             context = "pit_front_wing_damage"
-            priority = "HIGH"
+            
         elif "tyre wear" in pit_advice:
-            context = "pit_tyre_wear"
             priority = "HIGH"
+            context = "pit_tyre_wear"
+            
         else:
-            context = "pit_window"
             priority = "MEDIUM"
+            context = "pit_window"
+            
 
         messages.append(
             make_engineer_message(
-                context,
                 priority,
                 "pit",
+                context,
                 pit_advice
             )
         )
