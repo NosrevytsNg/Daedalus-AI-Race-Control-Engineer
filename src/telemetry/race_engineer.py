@@ -1,4 +1,5 @@
 import random
+import time
 from collections import deque
 
 recent_valid_laps = deque(maxlen=5)
@@ -36,6 +37,11 @@ def sort_engineer_messages(messages):
 
 active_delivery_groups = set()
 last_phrase_variant = {}
+
+radio_message_queue = []
+last_radio_delivery_time = 0
+
+RADIO_DELIVERY_COOLDOWN_SECONDS = 4.0
 
 
 DELIVERY_CONTEXT_GROUPS = {
@@ -307,12 +313,69 @@ def select_radio_phrase(delivery_group, fallback_text):
     return phrases[selected_index]
 
 
+# def prepare_delivery_messages(engineer_messages):
+#     global active_delivery_groups
+
+#     delivery_messages = []
+#     current_delivery_groups = set()
+
+#     for message in engineer_messages:
+#         delivery_group = get_delivery_group(message)
+
+#         if delivery_group is None:
+#             continue
+
+#         current_delivery_groups.add(delivery_group)
+
+#         # Option D behaviour:
+#         # Once a situation has been delivered, do not deliver it again
+#         # until the condition disappears and later returns.
+#         if delivery_group in active_delivery_groups:
+#             continue
+
+#         radio_text = select_radio_phrase(
+#             delivery_group,
+#             message["text"]
+#         )
+
+#         delivery_messages.append(
+#             {
+#                 "priority": message["priority"],
+#                 "category": message["category"],
+#                 "context": message["context"],
+#                 "delivery_group": delivery_group,
+#                 "text": radio_text,
+#                 "source_text": message["text"],
+#             }
+#         )
+
+#         active_delivery_groups.add(delivery_group)
+
+#     # If a condition disappears, remove it from active tracking.
+#     # This allows it to be delivered again if it returns later.
+#     active_delivery_groups = active_delivery_groups.intersection(
+#         current_delivery_groups
+#     )
+
+#     return sort_engineer_messages(delivery_messages)
+
+def get_radio_queue_size():
+    return len(radio_message_queue)
+
+
 def prepare_delivery_messages(engineer_messages):
     global active_delivery_groups
+    global radio_message_queue
+    global last_radio_delivery_time
 
-    delivery_messages = []
+    current_time = time.time()
+
     current_delivery_groups = set()
+    queued_or_active_groups = set(active_delivery_groups)
 
+    # Step 1:
+    # Look at all current engineer messages and decide which new situations
+    # should be added into the radio queue.
     for message in engineer_messages:
         delivery_group = get_delivery_group(message)
 
@@ -321,10 +384,9 @@ def prepare_delivery_messages(engineer_messages):
 
         current_delivery_groups.add(delivery_group)
 
-        # Option D behaviour:
-        # Once a situation has been delivered, do not deliver it again
-        # until the condition disappears and later returns.
-        if delivery_group in active_delivery_groups:
+        # If this situation is already active or already queued,
+        # do not add it again.
+        if delivery_group in queued_or_active_groups:
             continue
 
         radio_text = select_radio_phrase(
@@ -332,7 +394,7 @@ def prepare_delivery_messages(engineer_messages):
             message["text"]
         )
 
-        delivery_messages.append(
+        radio_message_queue.append(
             {
                 "priority": message["priority"],
                 "category": message["category"],
@@ -340,18 +402,55 @@ def prepare_delivery_messages(engineer_messages):
                 "delivery_group": delivery_group,
                 "text": radio_text,
                 "source_text": message["text"],
+                "created_at": current_time,
             }
         )
 
+        queued_or_active_groups.add(delivery_group)
         active_delivery_groups.add(delivery_group)
 
-    # If a condition disappears, remove it from active tracking.
-    # This allows it to be delivered again if it returns later.
+    # Step 2:
+    # If a condition disappears from the current engineer messages,
+    # remove it from active tracking.
     active_delivery_groups = active_delivery_groups.intersection(
         current_delivery_groups
     )
 
-    return sort_engineer_messages(delivery_messages)
+    # Step 3:
+    # Remove queued messages if their condition no longer exists.
+    # Example: VSC appears briefly, disappears, and the queued radio message
+    # has not been delivered yet.
+    radio_message_queue = [
+        message for message in radio_message_queue
+        if message["delivery_group"] in current_delivery_groups
+    ]
+
+    # Step 4:
+    # Sort the queue so the most important message is delivered first.
+    radio_message_queue = sort_engineer_messages(radio_message_queue)
+
+    # Step 5:
+    # If nothing is queued, nothing to deliver.
+    if not radio_message_queue:
+        return []
+
+    # Step 6:
+    # Cooldown control.
+    # Do not speak too many radio messages back-to-back.
+    time_since_last_delivery = current_time - last_radio_delivery_time
+
+    if (
+        last_radio_delivery_time != 0
+        and time_since_last_delivery < RADIO_DELIVERY_COOLDOWN_SECONDS
+    ):
+        return []
+
+    # Step 7:
+    # Release only one message.
+    next_message = radio_message_queue.pop(0)
+    last_radio_delivery_time = current_time
+
+    return [next_message]
 
 def suggest_pit_window(latest_lap_data, latest_car_damage, latest_tyre_sets):
     if latest_tyre_sets is None or latest_tyre_sets.fitted_set is None:
@@ -663,7 +762,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "HIGH",
                     "tyre",
-                    "tyre_damage_detected"
+                    "tyre_damage_detected",
                     f"Tyre damage detected ({max_damage:.0f}%)"
                 )
             )
@@ -673,7 +772,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "HIGH",
                     "tyre",
-                    "tyre_wear_critical"
+                    "tyre_wear_critical",
                     f"Tyres approaching end of life ({max_wear:.0f}%)"
                 )
             )
@@ -683,7 +782,7 @@ def config_engineer_messages(
                 make_engineer_message(
                     "MEDIUM",
                     "tyre",
-                    "tyre_damage_high",
+                    "tyre_wear_high",
                     f"Tyre wear high ({max_wear:.0f}%)"
                 )
             )

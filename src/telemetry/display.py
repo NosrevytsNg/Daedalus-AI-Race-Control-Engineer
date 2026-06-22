@@ -1,7 +1,7 @@
 import os
 
 from src.telemetry.parser import format_time_ms
-from src.telemetry.race_engineer import config_engineer_messages, suggest_pit_window, config_strategy_advice, analyze_driver_performance, prepare_delivery_messages
+from src.telemetry.race_engineer import config_engineer_messages, suggest_pit_window, config_strategy_advice, analyze_driver_performance, prepare_delivery_messages, get_radio_queue_size
 
 # Clear the console  
 def clear_terminal(): 
@@ -546,12 +546,14 @@ def display_live_telemetry(latest_telemetry,
     if delivery_messages:
         for message in delivery_messages:
             print(
-                f"[{message['priority']}]"
-                f"({message['delivery_group']})"
+                f"[{message['priority']}] "
+                f"({message['delivery_group']}) "
                 f"{message['text']}"
             )
     else:
-        print("No new radio messages")        
+        print("No new radio messages")
+
+    print(f"Radio Queue: {get_radio_queue_size()} pending")       
 
     strategy_advice = config_strategy_advice(
         latest_lap_data,
