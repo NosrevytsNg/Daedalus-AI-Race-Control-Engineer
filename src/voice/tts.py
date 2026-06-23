@@ -74,33 +74,93 @@ def _speech_worker():
         finally:
             _speech_queue.task_done()
 
+# ========================== TO BE REVIEWED (Daedalus v0.9.1D TTS Bookmark) =========================
+# def _speak_windows(text):
+#     if platform.system() != "Windows":
+#         if DEBUG_TTS_ERRORS:
+#             print("[TTS ERROR] Windows TTS is only available on Windows.")
+#         return
 
-def _speak_windows(text):
+#     powershell_command = r"""
+# Add-Type -AssemblyName System.Speech
+
+# $speaker = New-Object System.Speech.Synthesis.SpeechSynthesizer
+
+# $voiceName = $args[1]
+
+# if ($voiceName -ne $null -and $voiceName.Trim().Length -gt 0) {
+#     $speaker.SelectVoice($voiceName)
+# }
+
+# $speaker.Rate = [int]$args[2]
+# $speaker.Volume = [int]$args[3]
+
+# $speaker.Speak($args[0])
+
+# $speaker.Dispose()
+# """
+
+#     voice_name = VOICE_NAME if VOICE_NAME is not None else ""
+
+#     creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+#     result = subprocess.run(
+#         [
+#             "powershell",
+#             "-NoProfile",
+#             "-ExecutionPolicy",
+#             "Bypass",
+#             "-Command",
+#             powershell_command,
+#             text,
+#             voice_name,
+#             str(VOICE_RATE),
+#             str(VOICE_VOLUME),
+#         ],
+#         capture_output=True,
+#         text=True,
+#         creationflags=creation_flags,
+#         timeout=30,
+#     )
+
+#     if result.returncode != 0 and DEBUG_TTS_ERRORS:
+#         print("[TTS ERROR] PowerShell speech failed.")
+#         print(result.stderr)
+
+
+def _escape_powershell_string(text): # TO BE REVIEWED (Daedalus v0.9.1D TTS Bookmark)
+    return str(text).replace("'", "''")
+
+
+def _speak_windows(text): # TO BE REVIEWED (Daedalus v0.9.1D TTS Bookmark)
     if platform.system() != "Windows":
         if DEBUG_TTS_ERRORS:
             print("[TTS ERROR] Windows TTS is only available on Windows.")
         return
 
-    powershell_command = r"""
+    safe_text = _escape_powershell_string(text)
+    safe_voice_name = _escape_powershell_string(
+        VOICE_NAME if VOICE_NAME is not None else ""
+    )
+
+    powershell_command = f"""
 Add-Type -AssemblyName System.Speech
 
 $speaker = New-Object System.Speech.Synthesis.SpeechSynthesizer
 
-$voiceName = $args[1]
+$voiceName = '{safe_voice_name}'
 
-if ($voiceName -ne $null -and $voiceName.Trim().Length -gt 0) {
+if ($voiceName.Trim().Length -gt 0) {{
     $speaker.SelectVoice($voiceName)
-}
+}}
 
-$speaker.Rate = [int]$args[2]
-$speaker.Volume = [int]$args[3]
+$speaker.Rate = {VOICE_RATE}
+$speaker.Volume = {VOICE_VOLUME}
 
-$speaker.Speak($args[0])
+$speaker.Speak('{safe_text}')
 
 $speaker.Dispose()
 """
-
-    voice_name = VOICE_NAME if VOICE_NAME is not None else ""
 
     creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
@@ -112,10 +172,6 @@ $speaker.Dispose()
             "Bypass",
             "-Command",
             powershell_command,
-            text,
-            voice_name,
-            str(VOICE_RATE),
-            str(VOICE_VOLUME),
         ],
         capture_output=True,
         text=True,

@@ -2,6 +2,7 @@ import os
 
 from src.telemetry.parser import format_time_ms
 from src.telemetry.race_engineer import config_engineer_messages, suggest_pit_window, config_strategy_advice, analyze_driver_performance, prepare_delivery_messages, get_radio_queue_size
+from src.voice.tts import speak_radio_message
 
 # Clear the console  
 def clear_terminal(): 
@@ -550,6 +551,8 @@ def display_live_telemetry(latest_telemetry,
                 f"({message['delivery_group']}) "
                 f"{message['text']}"
             )
+
+            speak_radio_message(message["text"])
     else:
         print("No new radio messages")
 
