@@ -5,6 +5,80 @@ from collections import deque
 recent_valid_laps = deque(maxlen=5)
 last_consistency_lap_logged = None
 
+SESSION_MODE_UNKNOWN = "unknown"
+SESSION_MODE_PRACTICE = "practice"
+SESSION_MODE_QUALIFYING = "qualifying"
+SESSION_MODE_RACE = "race"
+SESSION_MODE_TIME_TRIAL = "time_trial"
+
+CURRENT_SESSION_MODE = SESSION_MODE_UNKNOWN
+
+
+def get_session_mode(latest_session_data):
+    if latest_session_data is None:
+        return SESSION_MODE_UNKNOWN
+
+    session_type = latest_session_data.session_type
+
+    practice_sessions = {
+        1,  # Practice 1
+        2,  # Practice 2
+        3,  # Practice 3
+        4,  # Short Practice
+    }
+
+    qualifying_sessions = {
+        5,  # Qualifying 1
+        6,  # Qualifying 2
+        7,  # Qualifying 3
+        8,  # Short Qualifying
+        9,  # One-Shot Qualifying
+    }
+
+    race_sessions = {
+        10,  # Race
+        11,  # Race 2
+        12,  # Race 3
+        15,  # F1 World Grand Prix
+    }
+
+    if session_type in practice_sessions:
+        return SESSION_MODE_PRACTICE
+
+    if session_type in qualifying_sessions:
+        return SESSION_MODE_QUALIFYING
+
+    if session_type in race_sessions:
+        return SESSION_MODE_RACE
+
+    if session_type == 13:
+        return SESSION_MODE_TIME_TRIAL
+
+    return SESSION_MODE_UNKNOWN
+
+
+def update_current_session_mode(latest_session_data):
+    global CURRENT_SESSION_MODE
+
+    CURRENT_SESSION_MODE = get_session_mode(latest_session_data)
+    return CURRENT_SESSION_MODE
+
+
+def is_race_mode(latest_session_data):
+    return get_session_mode(latest_session_data) == SESSION_MODE_RACE
+
+
+def is_qualifying_mode(latest_session_data):
+    return get_session_mode(latest_session_data) == SESSION_MODE_QUALIFYING
+
+
+def is_practice_mode(latest_session_data):
+    return get_session_mode(latest_session_data) == SESSION_MODE_PRACTICE
+
+
+def is_time_trial_mode(latest_session_data):
+    return get_session_mode(latest_session_data) == SESSION_MODE_TIME_TRIAL
+
 PRIORITY_ORDER = {
     "CRITICAL": 1,
     "HIGH": 2,
@@ -394,12 +468,144 @@ personality_radio_messages = {
     },
 }
 
+SESSION_RADIO_PHRASES = {
+    SESSION_MODE_RACE: {
+        "tyre_wear_critical": [
+            "Tyres are near the end of life. Prepare to box.",
+            "Tyre wear is high. We should consider the stop soon.",
+            "The tyres are dropping off. Pit window is approaching.",
+        ],
+
+        "fuel_critical": [
+            "Fuel is critical. Start saving immediately.",
+            "We are short on fuel. Lift and coast now.",
+            "Fuel target is critical. Save fuel every lap.",
+        ],
+
+        "safety_car": [
+            "Safety car deployed. Stay alert and manage delta.",
+            "Safety car is out. Watch the delta and keep temperatures up.",
+            "Full safety car. Reduce pace and manage the car.",
+        ],
+
+        "virtual_safety_car": [
+            "Virtual safety car deployed. Watch the delta.",
+            "VSC is out. Stay positive on the delta.",
+            "Virtual safety car. Manage the pace carefully.",
+        ],
+
+        "rain_expected": [
+            "Rain is expected soon. Prepare for changing conditions.",
+            "Rain is coming. Be ready for the tyre crossover.",
+            "We are expecting rain soon. Keep the next tyre in mind.",
+        ],
+    },
+
+    SESSION_MODE_QUALIFYING: {
+        "tyre_wear_critical": [
+            "Tyres are past their peak. This run may be compromised.",
+            "Tyre grip is dropping. Next push lap may be slower.",
+            "Tyres are fading. Consider a reset or fresh set.",
+        ],
+
+        "tyre_wear_high": [
+            "Tyres are starting to go away. Push lap performance may drop.",
+            "Tyre wear is building. This may affect the next sector.",
+            "Tyres are no longer at peak performance.",
+        ],
+
+        "ers_critical": [
+            "ERS is critically low. Recharge before the next push lap.",
+            "Battery is too low for a proper push lap. Harvest now.",
+            "ERS is nearly empty. Build charge before attacking.",
+        ],
+
+        "ers_low": [
+            "ERS is low. Recharge before the next push attempt.",
+            "Battery is low. Prepare the car before pushing.",
+            "ERS needs recovery before the next fast lap.",
+        ],
+
+        "rain_expected": [
+            "Rain is expected soon. Prioritise an early lap.",
+            "Weather is coming in. We should get a banker lap.",
+            "Rain threat is increasing. Track position matters now.",
+        ],
+    },
+
+    SESSION_MODE_PRACTICE: {
+        "tyre_wear_critical": [
+            "Tyres are heavily worn. This is useful degradation data.",
+            "Tyre wear is high. Good long-run information here.",
+            "The tyres are near the limit. This helps our degradation read.",
+        ],
+
+        "tyre_wear_high": [
+            "Tyre wear is building. Good data point for the run.",
+            "Tyres are starting to wear. Keep gathering long-run data.",
+            "Wear is increasing. Useful information for strategy planning.",
+        ],
+
+        "floor_damage_critical": [
+            "Critical floor damage. Balance data may no longer be reliable.",
+            "Severe floor damage. This run is compromised for setup data.",
+            "The floor is badly damaged. Be careful interpreting car balance.",
+        ],
+
+        "rain_expected": [
+            "Rain is expected soon. This may be useful mixed-condition data.",
+            "Weather is changing. Good chance to gather crossover information.",
+            "Rain is coming. Monitor how the car behaves as conditions change.",
+        ],
+    },
+
+    SESSION_MODE_TIME_TRIAL: {
+        "tyre_wear_critical": [
+            "Tyres are worn. Reset may be faster.",
+            "Tyres are past the limit. Consider restarting the run.",
+            "Grip is gone. A reset may be the better option.",
+        ],
+
+        "tyre_wear_high": [
+            "Tyres are starting to wear. Lap time may drop.",
+            "Tyre grip is fading. Reset if the lap is compromised.",
+            "Tyres are losing performance.",
+        ],
+
+        "front_wing_critical": [
+            "Front wing damage. Reset the run if possible.",
+            "Severe front wing damage. This attempt is compromised.",
+            "Front wing is damaged. Better to restart the run.",
+        ],
+
+        "floor_damage_critical": [
+            "Critical floor damage. This run is compromised.",
+            "Severe floor damage. Reset if possible.",
+            "Floor damage is critical. This lap will not be representative.",
+        ],
+
+        "ers_low": [
+            "ERS is low. Recharge before the next push attempt.",
+            "Battery is low. Build energy before pushing again.",
+            "ERS needs recovery before another fast lap.",
+        ],
+    },
+}
+
 
 def get_delivery_group(message):
     context = message.get("context")
     return DELIVERY_CONTEXT_GROUPS.get(context, context)
 
-def get_personality_phrase_pool(delivery_group):
+def get_radio_phrase_pool(delivery_group):
+    session_phrases = SESSION_RADIO_PHRASES.get(
+        CURRENT_SESSION_MODE,
+        {}
+    )
+
+    if delivery_group in session_phrases:
+        return session_phrases[delivery_group]
+
     personality_phrases = personality_radio_messages.get(
         ENGINEER_PERSONALITY,
         {}
@@ -407,20 +613,25 @@ def get_personality_phrase_pool(delivery_group):
 
     if delivery_group in personality_phrases:
         return personality_phrases[delivery_group]
-    
+
     return RADIO_PHRASES.get(delivery_group)
 
 
 def select_radio_phrase(delivery_group, fallback_text):
-    phrases = get_personality_phrase_pool(delivery_group)
+    phrases = get_radio_phrase_pool(delivery_group)
 
     if not phrases:
         return fallback_text
 
     if len(phrases) == 1:
         return phrases[0]
-    
-    phrase_key = f"{ENGINEER_PERSONALITY}:{delivery_group}"
+
+    phrase_key = (
+        f"{ENGINEER_PERSONALITY}:"
+        f"{CURRENT_SESSION_MODE}:"
+        f"{delivery_group}"
+    )
+
     previous_index = last_phrase_variant.get(phrase_key)
 
     available_indexes = [
@@ -864,6 +1075,8 @@ def config_engineer_messages(
 ):
     messages = []
 
+    update_current_session_mode(latest_session_data)
+
     # Tyre warnings
     if latest_car_damage is not None:
         max_wear = max(latest_car_damage.tyre_wear)
@@ -1139,6 +1352,68 @@ def config_strategy_advice(
 ):
     advice = []
 
+    session_mode = update_current_session_mode(latest_session_data)
+
+    if session_mode == SESSION_MODE_TIME_TRIAL:
+        advice.extend(
+            get_time_trial_strategy_advice(
+                latest_lap_data,
+                latest_car_status,
+                latest_car_damage,
+                latest_session_data,
+                latest_tyre_sets,
+            )
+        )
+
+        return advice
+    
+    if session_mode == SESSION_MODE_QUALIFYING:
+        advice.extend(
+            get_qualifying_strategy_advice(
+                latest_lap_data,
+                latest_car_status,
+                latest_car_damage,
+                latest_session_data,
+                latest_tyre_sets,
+            )
+        )
+
+        advice.extend(
+            get_weather_tyre_advice(
+                latest_session_data,
+                latest_tyre_sets,
+            )
+        )
+
+        return advice
+
+    if session_mode == SESSION_MODE_PRACTICE:
+        advice.extend(
+            get_practice_strategy_advice(
+                latest_lap_data,
+                latest_car_status,
+                latest_car_damage,
+                latest_session_data,
+                latest_tyre_sets,
+            )
+        )
+
+        advice.extend(
+            get_ers_deployment_advice(
+                latest_car_status,
+            )
+        )
+
+        advice.extend(
+            get_weather_tyre_advice(
+                latest_session_data,
+                latest_tyre_sets,
+            )
+        )
+
+        return advice
+        
+    # For Race and Unknown Sessions (Race-Style Strategy Logic)
     advice.extend(
         get_pit_timing_advice(
             latest_lap_data,
@@ -1180,6 +1455,172 @@ def config_strategy_advice(
             latest_tyre_sets,
         )
     )
+
+    return advice
+
+def get_front_wing_damage_level(latest_car_damage):
+    if latest_car_damage is None:
+        return 0
+
+    return max(
+        latest_car_damage.front_left_wing_damage,
+        latest_car_damage.front_right_wing_damage,
+    )
+
+
+def get_max_aero_damage_level(latest_car_damage):
+    if latest_car_damage is None:
+        return 0
+
+    return max(
+        latest_car_damage.floor_damage,
+        latest_car_damage.sidepod_damage,
+        latest_car_damage.diffuser_damage,
+    )
+
+
+def get_qualifying_strategy_advice(
+    latest_lap_data,
+    latest_car_status,
+    latest_car_damage,
+    latest_session_data,
+    latest_tyre_sets,
+):
+    advice = []
+
+    if latest_car_status is not None:
+        ers_pct = (
+            latest_car_status.ers_energy_storage
+            / 4_000_000
+        ) * 100
+
+        if ers_pct < 40:
+            advice.append(
+                "Qualifying: recharge ERS before the next push lap"
+            )
+
+        elif ers_pct > 80:
+            advice.append(
+                "Qualifying: ERS ready for a push lap"
+            )
+
+    if latest_tyre_sets is not None and latest_tyre_sets.fitted_set is not None:
+        fitted = latest_tyre_sets.fitted_set
+
+        if fitted.wear >= 30:
+            advice.append(
+                "Qualifying: tyres may be past peak performance"
+            )
+
+        elif fitted.wear <= 10:
+            advice.append(
+                "Qualifying: tyres are in a good window for a push lap"
+            )
+
+    if latest_session_data is not None:
+        for sample in latest_session_data.weather_forecast_samples[:3]:
+            if sample.rain_percentage >= 50 or sample.weather in (3, 4, 5):
+                advice.append(
+                    "Qualifying: rain threat detected - prioritise an early banker lap"
+                )
+                break
+
+    if (
+        get_front_wing_damage_level(latest_car_damage) > 20
+        or
+        get_max_aero_damage_level(latest_car_damage) > 20
+    ):
+        advice.append(
+            "Qualifying: car damage detected - this run may be compromised"
+        )
+
+    return advice
+
+
+def get_practice_strategy_advice(
+    latest_lap_data,
+    latest_car_status,
+    latest_car_damage,
+    latest_session_data,
+    latest_tyre_sets,
+):
+    advice = []
+
+    if latest_tyre_sets is not None and latest_tyre_sets.fitted_set is not None:
+        fitted = latest_tyre_sets.fitted_set
+
+        if fitted.wear >= 50:
+            advice.append(
+                "Practice: useful tyre degradation data - monitor long-run pace"
+            )
+
+        elif fitted.wear >= 25:
+            advice.append(
+                "Practice: tyre wear is building - continue collecting run data"
+            )
+
+    if get_max_aero_damage_level(latest_car_damage) >= 50:
+        advice.append(
+            "Practice: aero damage is high - balance data may no longer be reliable"
+        )
+
+    elif get_front_wing_damage_level(latest_car_damage) > 20:
+        advice.append(
+            "Practice: front wing damage detected - setup feedback may be affected"
+        )
+
+    if latest_session_data is not None:
+        for sample in latest_session_data.weather_forecast_samples[:3]:
+            if sample.rain_percentage >= 50 or sample.weather in (3, 4, 5):
+                advice.append(
+                    "Practice: changing weather may provide useful crossover data"
+                )
+                break
+
+    return advice
+
+
+def get_time_trial_strategy_advice(
+    latest_lap_data,
+    latest_car_status,
+    latest_car_damage,
+    latest_session_data,
+    latest_tyre_sets,
+):
+    advice = []
+
+    if latest_car_status is not None:
+        ers_pct = (
+            latest_car_status.ers_energy_storage
+            / 4_000_000
+        ) * 100
+
+        if ers_pct < 40:
+            advice.append(
+                "Time Trial: recharge ERS before the next push attempt"
+            )
+
+        elif ers_pct > 80:
+            advice.append(
+                "Time Trial: ERS is ready for another push attempt"
+            )
+
+    if latest_tyre_sets is not None and latest_tyre_sets.fitted_set is not None:
+        fitted = latest_tyre_sets.fitted_set
+
+        if fitted.wear >= 30:
+            advice.append(
+                "Time Trial: tyres are worn - reset may be faster"
+            )
+
+    if (
+        get_front_wing_damage_level(latest_car_damage) > 0
+        or
+        get_max_aero_damage_level(latest_car_damage) > 0
+    ):
+        advice.append(
+            "Time Trial: car damage detected - reset this run if possible"
+        )
 
     return advice
 
