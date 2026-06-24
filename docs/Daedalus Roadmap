@@ -127,7 +127,7 @@ v0.9.1 — Message Delivery Manager
   v0.9.1C — Radio Queue (Message Sequencing & Interruption Rules) 🟡 Implemented / partially validated
   v0.9.1D — Real TTS / Radio Voice 🟡 Implemented / partially validated
 
-v0.9.2 — Engineer Personality 🔴 Unimplemented / unvalidated
+v0.9.2 — Engineer Personality 🟡 Implemented / partially validated
 
 v0.9.3 — Session Awareness (Advice with Context) 🔴 Unimplemented / unvalidated
 - Practice
