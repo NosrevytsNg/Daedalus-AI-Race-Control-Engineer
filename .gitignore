@@ -6,3 +6,4 @@ __pycache__/
 .DS_Store
 .pytest_cache/
 .codex/ # Ignore Codex configuration files (unaware of Codex's involvement in the project)
+/logs/
