@@ -38,6 +38,31 @@ def sort_engineer_messages(messages):
 active_delivery_groups = set()
 last_phrase_variant = {}
 
+# Uncomment desired personality choice when needed
+#ENGINEER_PERSONALITY = "balanced" # DEFAULT
+ENGINEER_PERSONALITY = "calm"
+#ENGINEER_PERSONALITY = "aggresive"
+#ENGINEER_PERSONALITY = "concise"
+
+AVAILABLE_PERSONALITIES = {
+    "balanced",
+    "calm",
+    "aggresive",
+    "concise",
+}
+
+def get_engineer_personality():
+    return ENGINEER_PERSONALITY
+
+def set_engineer_personality(personality):
+    global ENGINEER_PERSONALITY
+
+    if personality not in AVAILABLE_PERSONALITIES:
+        return False
+    
+    ENGINEER_PERSONALITY = personality
+    return True
+
 radio_message_queue = []
 last_radio_delivery_time = 0
 
@@ -284,22 +309,119 @@ RADIO_PHRASES = {
     ],
 }
 
+personality_radio_messages = {
+    "balanced": {},
+    "calm": {
+        "floor_damage_critical": [
+            "You have severe front wing damage. Box this lap. Box",
+            "Front wing damage. Box now. Box",
+            "We need to pit to replace the front wing, keep it steady and box this lap",
+        ],
+        "floor_damage_critical": [
+            "Critical floor damage. The car will be difficult to drive",
+            "There is floor damage on the car, you will experience a lot of loss in downforce",
+            "The floor is heavily damage, be careful you will lose a lot of downforce",
+        ],
+        "fuel_critical": [
+            "Fuel is critical. Begin saving as much as possible",
+            "We need to save fuel. Lift and coast where possible",
+            "LICO, LICO. Fuel is at a critical level. LICO where possible",
+        ],
+        "ers_critical": [
+            "ERS is critical low. Harvest it this lap.",
+            "Battery is low. Remember to harvest it this lap.",
+            "ERS low, change mode to harvest"
+        ],
+        "safety_car": [
+            "Safety car deployed. I repeat, safety car deployed",
+            "Full safety car. Watch your delta and maintain position. No overtaking.",
+            "Safety car is out. Manage your delta and reduce pace",
+        ],
+    },
+    "aggresive": {
+        "floor_damage_critical": [
+            "Box now. Box this lap. You have front wing damage",
+            "Front wing damage. Pit this lap. Box now box.",
+            "We need to pit to replace the front wing, bring it in now",
+        ],
+        "floor_damage_critical": [
+            "Critical floor damage. The car is heavily compromised. Expect the unexpected",
+            "There is severe floor damage on the car, you will experience a lot of loss in downforce",
+            "The floor is heavily damage, do your best, keep it on the track ",
+        ],
+        "fuel_critical": [
+            "Fuel is critical. Save it now",
+            "We are short on fuel. Lift and coast immediately",
+            "LICO, LICO. Fuel is at a critical level. LICO now",
+        ],
+        "ers_critical": [
+            "ERS is critical low. Harvest it this lap.",
+            "Battery is low. Remember to harvest it this lap.",
+            "ERS low, change mode to harvest"
+        ],
+        "safety_car": [
+            "Safety car deployed. I repeat, safety car deployed. Watch your delta.",
+            "Full safety car. Watch your delta and maintain position. No overtaking.",
+            "Safety car is out. Manage your delta and reduce pace",
+        ],
+    },
+    "concise": {
+        "floor_damage_critical": [
+            "Front wing damage. Box this lap.",
+            "Severe wing damage, pit now",
+            "Front wing critical. Box.",
+        ],
+        "floor_damage_critical": [
+            "Floor critical.",
+            "Severe floor damage.",
+            "Floor damage high. Careful.",
+        ],
+        "fuel_critical": [
+            "Fuel is critical.",
+            "Save fuel now. Lift and coast",
+            "LICO, LICO.",
+        ],
+        "ers_critical": [
+            "ERS low. Harvest. Harvest.",
+            "Battery is low. Harvest it this lap.",
+            "ERS low, change mode to harvest"
+        ],
+        "safety_car": [
+            "Safety car deployed.",
+            "Full safety car.",
+            "Safety car is out.",
+        ],
+    },
+}
+
 
 def get_delivery_group(message):
     context = message.get("context")
     return DELIVERY_CONTEXT_GROUPS.get(context, context)
 
+def get_personality_phrase_pool(delivery_group):
+    personality_phrases = personality_radio_messages.get(
+        ENGINEER_PERSONALITY,
+        {}
+    )
+
+    if delivery_group in personality_phrases:
+        return personality_phrases[delivery_group]
+    
+    return RADIO_PHRASES.get(delivery_group)
+
 
 def select_radio_phrase(delivery_group, fallback_text):
-    phrases = RADIO_PHRASES.get(delivery_group)
+    phrases = get_personality_phrase_pool(delivery_group)
 
     if not phrases:
         return fallback_text
 
     if len(phrases) == 1:
         return phrases[0]
-
-    previous_index = last_phrase_variant.get(delivery_group)
+    
+    phrase_key = f"{ENGINEER_PERSONALITY}:{delivery_group}"
+    previous_index = last_phrase_variant.get(phrase_key)
 
     available_indexes = [
         index for index in range(len(phrases))
@@ -308,7 +430,7 @@ def select_radio_phrase(delivery_group, fallback_text):
 
     selected_index = random.choice(available_indexes)
 
-    last_phrase_variant[delivery_group] = selected_index
+    last_phrase_variant[phrase_key] = selected_index
 
     return phrases[selected_index]
 
