@@ -1,3 +1,0 @@
-timestamp,session_uid,last_lap_num,current_lap_num,sector_1_ms,sector_2_ms,sector_3_ms,speed,throttle,brake,ers_energy_storage,fuel_remaining_laps,fuel_in_tank,tyre_wear_rl,tyre_wear_rr,tyre_wear_fl,tyre_wear_fr
-2026-06-21T04:16:44.638896,9551233486102539456,4,111337,0,0,30341,297,1.0,0.0,3834397.25,8.178691864013672,104.82327270507812,3.0,2.0,4.0,2.0
-2026-06-21T04:18:12.877415,9551233486102539456,5,88219,0,0,29139,303,1.0,0.0,1105322.75,8.117557525634766,102.9124755859375,8.0,5.0,12.0,4.0
