@@ -136,6 +136,10 @@ v0.9.3 — Session Awareness (Advice with Context) 🟡 Implemented / partially 
 - Time Trial
 
 v0.9.4 — Consistency Analysis 🔴 Unimplemented / unvalidated
+  v0.9.4A — Lap History Capsule 🔴 Unimplemented / unvalidated
+  v0.9.4B — Value Lap Filter 🔴 Unimplemented / unvalidated
+  v0.9.4C — Consistency Metrics 🔴 Unimplemented / unvalidated
+  v0.9.4D — Session-Awareness Consistency 🔴 Unimplemented / unvalidated
 
 Phase 9: Voice
 v0.10.0 — Voice engineer 🔴 Unimplemented / unvalidated
