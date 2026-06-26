@@ -1944,7 +1944,7 @@ def analyze_driver_performance(
 
     analysis["consistency"] = consistency_message
 
-    for message in consistency_message["message"]:
+    for message in consistency_message["messages"]:
         analysis["message"].append(message)        
 
     return analysis
@@ -2073,7 +2073,7 @@ def analyze_consistency(latest_lap_data, latest_session_history, latest_car_dama
     recent_valid_laps.append(
         {
             "lap_num": completed_lap_num,
-            "lap_time_ms": last_lap,
+            "lap_time_ms": last_lap, # <== Typo
             "delta_to_best_ms": last_lap - best_lap,
         }
     )
@@ -2086,7 +2086,7 @@ def analyze_consistency(latest_lap_data, latest_session_history, latest_car_dama
         return result
     
     lap_times = [
-        lap["lap_times_ms"]
+        lap["lap_time_ms"] # <== Typo
         for lap in recent_valid_laps
     ]
 
@@ -2123,7 +2123,7 @@ def analyze_consistency(latest_lap_data, latest_session_history, latest_car_dama
 
     if status == "consistent":
         if session_mode == SESSION_MODE_PRACTICE:
-            result["message"].append(
+            result["messages"].append(
                 f"Consistent long-run pace - last {lap_count} valid laps within {lap_range_seconds:.3f}s."
             )
 

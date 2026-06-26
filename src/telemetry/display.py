@@ -591,8 +591,8 @@ def display_live_telemetry(latest_telemetry,
     print("PERFORMANCE ANALYSIS")
     print("----------------------------------------------------")
 
-    if performance_analysis["messages"]:
-        for message in performance_analysis["messages"]:
+    if performance_analysis["message"]:
+        for message in performance_analysis["message"]:
             print(f"- {message}")
     else:
         print("Not enough lap data yet")
