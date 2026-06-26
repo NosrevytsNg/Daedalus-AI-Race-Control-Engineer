@@ -122,12 +122,12 @@ v0.9.0B — Telemetry Logger (Storage) 🟢 Implemented / validated
 v0.9.0C — Message Priority System (Critical, High, Medium, Low, Info) 🟡 Implemented / partially validated
 
 v0.9.1 — Message Delivery Manager  
-  v0.9.1A — Message Context System 🟡 Implemented / partially validated
+  v0.9.1A — Message Context System                                                                          🟡 Implemented / partially validated
   v0.9.1B — Delivery Cooldown + Phrase Variation Dictionary (Context Grouping + Variation Support/Rotation) 🟡 Implemented / partially validated
-  v0.9.1C — Radio Queue (Message Sequencing & Interruption Rules) 🟡 Implemented / partially validated
-  v0.9.1D — Real TTS / Radio Voice 🟡 Implemented / partially validated
+  v0.9.1C — Radio Queue (Message Sequencing & Interruption Rules)                                           🟡 Implemented / partially validated
+  v0.9.1D — Real TTS / Radio Voice                                                                          🟡 Implemented / partially validated
 
-v0.9.2 — Engineer Personality 🟡 Implemented / partially validated
+v0.9.2 — Engineer Personality                    🟡 Implemented / partially validated
 
 v0.9.3 — Session Awareness (Advice with Context) 🟡 Implemented / partially validated
 - Practice
@@ -135,11 +135,15 @@ v0.9.3 — Session Awareness (Advice with Context) 🟡 Implemented / partially 
 - Race
 - Time Trial
 
-v0.9.4 — Consistency Analysis 🔴 Unimplemented / unvalidated
-  v0.9.4A — Lap History Capsule 🔴 Unimplemented / unvalidated
-  v0.9.4B — Value Lap Filter 🔴 Unimplemented / unvalidated
-  v0.9.4C — Consistency Metrics 🔴 Unimplemented / unvalidated
-  v0.9.4D — Session-Awareness Consistency 🔴 Unimplemented / unvalidated
+v0.9.4 — Consistency Analysis             🟡 Implemented / partially validated
+  v0.9.4A — Lap History Capsule           🟡 Implemented / partially validated
+  v0.9.4B — Value Lap Filter              🟡 Implemented / partially validated
+  v0.9.4C — Consistency Metrics           🟡 Implemented / partially validated
+  v0.9.4D — Session-Awareness Consistency 🟡 Implemented / partially validated
+
+v0.9.5 — Radio Control / Anti-Spam Refinement 🔴 Unimplemented / unvalidated
+v0.9.6 — Driver Coaching Module               🔴 Unimplemented / unvalidated
+v0.9.7 — Race State Memory                    🔴 Unimplemented / unvalidated
 
 Phase 9: Voice
 v0.10.0 — Voice engineer 🔴 Unimplemented / unvalidated
