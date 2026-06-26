@@ -1828,16 +1828,32 @@ def get_undercut_overcut_advice(
 def analyze_driver_performance(
         latest_lap_data,
         latest_session_history,
+        latest_car_damage=None,
+        latest_session_data=None,
 ):
     analysis = {"lap_comparison": None, 
                 "sector_comparison": None, 
-                "messages": []}
+                "consistency": None,
+                "message": []}
         
     if latest_lap_data is None or latest_session_history is None:
-        analysis["messages"].append("Not enough data yet.")
+        analysis["message"].append("Not enough data yet.")
         return analysis
     
-# Lap Comparison (Last vs Best)
+    update_current_session_mode(latest_session_data)
+
+    if is_safety_car_active(latest_session_data):
+        analysis["message"].append(
+            "Performance analysis paused - Safety Car/VSC active"
+        )
+        return analysis
+
+    if is_major_damage_for_performance(latest_car_damage):
+        analysis["message"].append(
+            "Performance analysis paused - Car damage is affecting lap times."
+        )
+    
+    # Lap Comparison (Last vs Best)
     last_lap = latest_lap_data.last_lap_time_ms
     best_lap = latest_session_history.best_lap_time_ms
 
@@ -1852,17 +1868,17 @@ def analyze_driver_performance(
             }
 
             if lap_delta > 0:
-                analysis["messages"].append(
+                analysis["message"].append(
                     f"Last lap was {lap_delta / 1000:.3f}s slower than your best"
                 )
 
             elif lap_delta < 0:
-                analysis["messages"].append(
+                analysis["message"].append(
                     f"Last lap was {lap_delta / 1000:.3f}s faster than your best"
                 )
 
             else:
-                analysis["messages"].append(
+                analysis["message"].append(
                     f"👍"
                 )
 
@@ -1908,73 +1924,298 @@ def analyze_driver_performance(
         }   
 
         if worst_sec_delta > 0:
-            analysis["messages"].append(
+            analysis["message"].append(
                 f"Most time lost in {worst_sec}: "
                 f"+{worst_sec_delta / 1000:.3f}s."
             )
 
         if worst_sec_delta < 0:
-            analysis["messages"].append(
+            analysis["message"].append(
                 f"Strongest sector is {worst_sec}: "
                 f"+{worst_sec_delta / 1000:.3f}s faster."
             ) 
 
-    consistency_messages = analyze_consistency(
+    consistency_message = analyze_consistency(
         latest_lap_data,
         latest_session_history,
+        latest_car_damage,
+        latest_session_data,
     )
 
-    analysis["messages"].extend(consistency_messages)        
+    analysis["consistency"] = consistency_message
 
-    return analysis    
+    for message in consistency_message["message"]:
+        analysis["message"].append(message)        
 
-def analyze_consistency(latest_lap_data, latest_session_history):
+    return analysis
+
+def get_completed_lap_num(latest_lap_data):
+    if latest_lap_data is None:
+        return None
+
+    return latest_lap_data.current_lap_num - 1
+
+def is_safety_car_active(latest_session_data):
+    if latest_session_data is None:
+        return False
+
+    return latest_session_data.safety_car_status in (1, 2)
+
+def get_performance_front_wing_damage(latest_car_damage):
+    if latest_car_damage is None:
+        return 0
+
+    return max(latest_car_damage.front_left_wing_damage, latest_car_damage.front_right_wing_damage,)  
+
+def get_performance_aero_damage(latest_car_damage):
+    if latest_car_damage is None:
+        return 0
+    
+    return max(latest_car_damage.floor_damage, latest_car_damage.sidepod_damage, latest_car_damage.diffuser_damage,)
+
+def get_performance_tyre_damage(latest_car_damage):
+    if latest_car_damage is None:
+        return 0
+    
+    return max(latest_car_damage.tyre_damage)
+
+def is_major_damage_for_performance(latest_car_damage):
+    if latest_car_damage is None:
+        return False
+    
+    if get_performance_front_wing_damage(latest_car_damage) >= 20:
+        return True
+    
+    if get_performance_aero_damage(latest_car_damage) >= 50:
+        return True
+    
+    if get_performance_tyre_damage(latest_car_damage) >= 50:
+        return True
+
+    return False
+
+def is_consistency_supported_session(latest_session_data):
+    session_mode = get_session_mode(latest_session_data)
+
+    return session_mode in (
+        SESSION_MODE_RACE,
+        SESSION_MODE_PRACTICE,
+        SESSION_MODE_TIME_TRIAL,
+    )
+
+def get_consistency_thresholds(latest_session_data):
+    session_mode = get_session_mode(latest_session_data)
+
+    if session_mode == SESSION_MODE_TIME_TRIAL:
+        return {"consistent": 400, "variable": 1000,}
+    
+    if session_mode == SESSION_MODE_PRACTICE:
+        return {"consistent": 900, "variable": 1800,}
+    
+    if session_mode == SESSION_MODE_RACE:
+        return {"consistent": 750, "variable": 1500,}
+
+
+def analyze_consistency(latest_lap_data, latest_session_history, latest_car_damage=None, latest_session_data=None,):
     global last_consistency_lap_logged
 
-    messages = []
+    result = {
+        "enabled": True,
+        "recorded": False,
+        "reason": None,
+        "metrics": None,
+        "messages": [],
+    }
 
     if latest_lap_data is None or latest_session_history is None:
-        return messages
-
-    current_lap_num = latest_lap_data.current_lap_num
+        result["reason"] = "Not enough data"
+        return result
+    
+    if not is_consistency_supported_session(latest_session_data):
+        result["enabled"] = False
+        result["reason"] = "Consistency analysis disabled"
+        return result
+    
+    if is_safety_car_active(latest_session_data):
+        result["reason"] = "Safety Car or VSC Active"
+        return result
+    
+    if is_major_damage_for_performance(latest_car_damage):
+        result["reason"] = "Car damage affecting lap time"
+        return result
+    
+    completed_lap_num = get_completed_lap_num(latest_lap_data)
     last_lap = latest_lap_data.last_lap_time_ms
     best_lap = latest_session_history.best_lap_time_ms
 
+    if completed_lap_num is None or completed_lap_num <= 0:
+        result["reason"] = "No completed laps"
+        return result
+    
     if last_lap is None or best_lap is None:
-        return messages
-
+        result["reason"] = "Missing lap times"
+        return result
+    
     if last_lap <= 0 or best_lap <= 0:
-        return messages
-
-    if last_consistency_lap_logged == current_lap_num:
-        return messages
-
-    last_consistency_lap_logged = current_lap_num
-
+        result["reason"] = "Invalid lap time"
+        return result
+    
+    if last_consistency_lap_logged == completed_lap_num:
+        result["reason"] = "Lap already recorded"
+        return result
+    
     if last_lap > best_lap * 1.10:
-        return messages
+        result["reason"]  = "Outlier lap ignored"
+        return result
+    
+    last_consistency_lap_logged= completed_lap_num
 
-    recent_valid_laps.append(last_lap)
+    recent_valid_laps.append(
+        {
+            "lap_num": completed_lap_num,
+            "lap_time_ms": last_lap,
+            "delta_to_best_ms": last_lap - best_lap,
+        }
+    )
+
+    result["recorded"] = True
+    result["reason"] = "Lap recorded"
 
     if len(recent_valid_laps) < 3:
-        return messages
+        result["reason"] = "Waiting for more valid laps"
+        return result
+    
+    lap_times = [
+        lap["lap_times_ms"]
+        for lap in recent_valid_laps
+    ]
 
-    lap_range = max(recent_valid_laps) - min(recent_valid_laps)
-    avg_lap = sum(recent_valid_laps) / len(recent_valid_laps)
+    lap_range = max(lap_times) - min(lap_times)
+    avg_lap = sum(lap_times) / len(lap_times)
 
-    if lap_range <= 500:
-        messages.append(
-            f"Consistent pace - last {len(recent_valid_laps)} laps within {lap_range / 1000:.3f}s"
-        )
+    variance = sum((lap_time - avg_lap) ** 2 for lap_time in lap_times) / len(lap_times)
 
-    elif lap_range <= 1500:
-        messages.append(
-            f"Pace variation detected - last {len(recent_valid_laps)} laps spread by {lap_range / 1000:.3f}s"
+    standard_deviation = variance ** 0.5
+
+    thresholds = get_consistency_thresholds(latest_session_data)
+
+    if lap_range <= thresholds["consistent"]:
+        status = "consistent"
+    elif lap_range <= thresholds["variable"]:
+        status = "variable"
+    else:
+        status = "inconsistent"
+
+    result["metrics"] = {
+        "status": status,
+        "lap_count": len(recent_valid_laps),
+        "lap_range_ms": lap_range,
+        "average_lap_ms": avg_lap,
+        "standard_deviation_ms": standard_deviation,
+        "laps": list(recent_valid_laps),
+    }
+
+    lap_count = result["metrics"]["lap_count"]
+    lap_range_seconds = lap_range / 1000
+    standard_deviation_seconds = standard_deviation / 1000
+
+    session_mode = get_session_mode(latest_session_data)
+
+    if status == "consistent":
+        if session_mode == SESSION_MODE_PRACTICE:
+            result["message"].append(
+                f"Consistent long-run pace - last {lap_count} valid laps within {lap_range_seconds:.3f}s."
+            )
+
+        elif session_mode == SESSION_MODE_TIME_TRIAL:
+            result["messages"].append(
+                f"Consistent attempts - last {lap_count} valid laps within {lap_range_seconds:.3f}s."
+            )
+
+        else:
+            result["messages"].append(
+                f"Consistent race pace - last {lap_count} valid laps within {lap_range_seconds:.3f}s."
+            )
+
+    elif status == "variable":
+        result["messages"].append(
+            f"Pace variation detected - last {lap_count} valid laps spread by {lap_range_seconds:.3f}s."
         )
 
     else:
-        messages.append(
-            f"Inconsistent pace - lap time spread is {lap_range / 1000:.3f}s"
+        result["messages"].append(
+            f"Inconsistent pace - last {lap_count} valid laps spread by {lap_range_seconds:.3f}s "
+            f"(std dev {standard_deviation_seconds:.3f}s)."
         )
 
-    return messages       
+    return result
+
+    # if lap_range <= 500:
+    #     messages.append(
+    #         f"Consistent pace - last {len(recent_valid_laps)} laps within {lap_range / 1000:.3f}s"
+    #     )
+
+    # elif lap_range <= 1500:
+    #     messages.append(
+    #         f"Pace variation detected - last {len(recent_valid_laps)} laps spread by {lap_range / 1000:.3f}s"
+    #     )
+
+    # else:
+    #     messages.append(
+    #         f"Inconsistent pace - lap time spread is {lap_range / 1000:.3f}s"
+    #     )
+
+    # return messages
+    
+
+
+    # =========================================================================================================================================== 
+    # Previous consistency analysis matrix and system (Unverified/Untested)
+
+    # messages = []
+
+    # if latest_lap_data is None or latest_session_history is None:
+    #     return messages
+
+    # current_lap_num = latest_lap_data.current_lap_num
+    # last_lap = latest_lap_data.last_lap_time_ms
+    # best_lap = latest_session_history.best_lap_time_ms
+
+    # if last_lap is None or best_lap is None:
+    #     return messages
+
+    # if last_lap <= 0 or best_lap <= 0:
+    #     return messages
+
+    # if last_consistency_lap_logged == current_lap_num:
+    #     return messages
+
+    # last_consistency_lap_logged = current_lap_num
+
+    # if last_lap > best_lap * 1.10:
+    #     return messages
+
+    # recent_valid_laps.append(last_lap)
+
+    # if len(recent_valid_laps) < 3:
+    #     return messages
+
+    # lap_range = max(recent_valid_laps) - min(recent_valid_laps)
+    # avg_lap = sum(recent_valid_laps) / len(recent_valid_laps)
+
+    # if lap_range <= 500:
+    #     messages.append(
+    #         f"Consistent pace - last {len(recent_valid_laps)} laps within {lap_range / 1000:.3f}s"
+    #     )
+
+    # elif lap_range <= 1500:
+    #     messages.append(
+    #         f"Pace variation detected - last {len(recent_valid_laps)} laps spread by {lap_range / 1000:.3f}s"
+    #     )
+
+    # else:
+    #     messages.append(
+    #         f"Inconsistent pace - lap time spread is {lap_range / 1000:.3f}s"
+    #     )
+
+    # return messages       

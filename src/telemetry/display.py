@@ -582,6 +582,8 @@ def display_live_telemetry(latest_telemetry,
     performance_analysis = analyze_driver_performance(
         latest_lap_data,
         latest_session_history,
+        latest_car_damage,
+        latest_session_data,
     )
 
     print()
