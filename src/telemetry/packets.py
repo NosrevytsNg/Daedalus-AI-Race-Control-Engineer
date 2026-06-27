@@ -16,6 +16,7 @@ PACKET_NAMES = {
     14: "Time Trial",
     15: "Lap Positions",
 }
+
 # 1. Car Telemetry Data
 PACKET_ID_CAR_TELEMETRY = 6 # [6: "Car Telemetry"]
 

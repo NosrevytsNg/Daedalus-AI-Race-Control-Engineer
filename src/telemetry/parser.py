@@ -1,6 +1,34 @@
 import struct
 from dataclasses import dataclass
 
+# struct PacketHeader
+# {
+#   uint16 m_packetFormat;                       2025  
+#   uint8  m_gameYear;                           Game Year = Last 2 Digits
+#   uint8  m_gameMajorVersion;                   Major Version = "X.00"
+#   uint8  m_gameMinorVersion;                   Minor Version = "1.XX"
+#   uint8  m_packetVersion;                      Starts from 1
+#   uint8  m_packetId;                           ** Packet Type Identifier ** [IMPORTANT]
+#   uint64 m_sessionUID;                         Unique Session Identifier
+#   float  m_sessionTime;                        Session Timestamp
+#   uint32 m_frameIdentifier;                    Identifier for frame the data was retrieved on
+#   uint32 m_overallFrameIdentifier;             Overall identifier for frame the data was retrieved on
+#   uint8  m_playerCarIndex;                     Index of Player's Car in array 
+#   uint8  m_secondaryPlayerCarIndex;            Index of Secondary Player's Car in array (Splitscreen)
+# }
+
+# Python struct terms:
+
+# < means Little Endian
+# H means unsigned short (2 bytes = uint16)
+# B means unsigned char (1 bytes = uint8)
+# Q means unsigned long long (8 bytes = uint64)
+# f means unsigned floating-point num (4 bytes = float)
+# I means unsigned int (4 bytes = uint 32)
+# "<HBBBBBQfIIBB" = H B B B B B Q f I I B B
+# 1 uint16 -> 5 uint8 -> 1 uint64 -> 1 float -> 2 unint32 -> 2 uint8
+
+
 HEADER_FORMAT = "<HBBBBBQfIIBB"
 HEADER_SIZE = struct.calcsize(HEADER_FORMAT)
 
