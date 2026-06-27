@@ -37,3 +37,9 @@ time.sleep(1)
 print("TEST 3: ERS low only")
 print(prepare_delivery_messages([ers_low]))
 print("queue:", get_radio_queue_size())
+
+time.sleep(4.2)
+
+print("TEST 4: ERS low after cooldown")
+print(prepare_delivery_messages([ers_low]))
+print("queue:", get_radio_queue_size())

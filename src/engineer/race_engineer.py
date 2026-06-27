@@ -189,7 +189,7 @@ def is_radio_message_expired(message, current_time):
     
     return current_time >= expires_at
 
-def should_supress_radio_message(message, active_engineer_messages):
+def should_suppress_radio_message(message, active_engineer_messages):
     priority = message.get("priority")
     delivery_group = get_delivery_group(message)
 
@@ -203,11 +203,12 @@ def should_supress_radio_message(message, active_engineer_messages):
         for active_message in active_engineer_messages
     )
 
-    if critical_active and priority in ("MEIDUM", "LOW", "INFO"):
+    if critical_active and priority in ("MEDIUM", "LOW", "INFO"):
         return True
     
     if high_active and priority in ("LOW", "INFO"):
         return True
+    
     if critical_active and delivery_group in NON_ESSENTIAL_RADIO_GROUPS:
         return True
     
@@ -809,7 +810,7 @@ def prepare_delivery_messages(engineer_messages):
 
         # If this situation is already active or already queued,
         # do not add it again.
-        if should_supress_radio_message(message, engineer_messages):
+        if should_suppress_radio_message(message, engineer_messages):
             continue
 
         if delivery_group in queued_or_active_groups:
@@ -828,7 +829,7 @@ def prepare_delivery_messages(engineer_messages):
         if lifetime_seconds is None:
             expires_at = None
         else:
-            expires_at = current_time = lifetime_seconds
+            expires_at = current_time + lifetime_seconds
 
         radio_message_queue.append(
             {
