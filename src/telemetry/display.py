@@ -1,7 +1,7 @@
 import os
 
 from src.telemetry.parser import format_time_ms
-from src.telemetry.race_engineer import config_engineer_messages, suggest_pit_window, config_strategy_advice, analyze_driver_performance, prepare_delivery_messages, get_radio_queue_size
+from engineer.race_engineer import config_engineer_messages, suggest_pit_window, config_strategy_advice, analyze_driver_performance, prepare_delivery_messages, get_radio_queue_size
 from src.voice.tts import speak_radio_message
 
 # Clear the console  
