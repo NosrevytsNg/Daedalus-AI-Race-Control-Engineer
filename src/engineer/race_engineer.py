@@ -971,12 +971,12 @@ def get_fuel_warnings(latest_car_status):
 
     fuel_laps = latest_car_status.fuel_remaining_laps
 
-    if fuel_laps < 2:
+    if fuel_laps < 0.1:
         warnings.append(
             "Fuel critical"
         )
 
-    elif fuel_laps < 5:
+    elif fuel_laps < 0.5:
         warnings.append(
             "Fuel marginal"
         )

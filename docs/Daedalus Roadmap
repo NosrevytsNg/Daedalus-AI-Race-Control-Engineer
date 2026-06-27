@@ -150,21 +150,21 @@ v0.9.4 — Consistency Analysis             🟡 Implemented / partially validat
   v0.9.4C — Consistency Metrics           🟡 Implemented / partially validated
   v0.9.4D — Session-Awareness Consistency 🟡 Implemented / partially validated
 
-v0.9.5 — Radio Behavioural Intelligence (Control / Anti-Spam Refinement) 🔴 Unimplemented / unvalidated
+v0.9.5 — Radio Behavioural Intelligence (Control / Anti-Spam Refinement) 🟡 Implemented / partially validated
 │
-├── A. Radio Situation Policy
+├── A. Radio Situation Policy 🟢 Implemented / validated
 │   └── Decide: deliver, suppress, delay, interrupt, expire
 │
-├── B. Priority-Based Interrupts
+├── B. Priority-Based Interrupts 🟢 Implemented / validated
 │   └── Critical/high-priority messages can bypass normal cooldown
 │
-├── C. Driving Context Suppression
+├── C. Driving Context Suppression 🟢 Implemented / validated
 │   └── Hide low-value messages when more important situations are active
 │
-├── D. Stale Message Expiry
+├── D. Stale Message Expiry 🟢 Implemented / validated
 │   └── Remove old queued messages that are no longer useful
 │
-└── E. Radio Behaviour Debug
+└── E. Radio Behaviour Debug 🟡 Implemented / partially validated
     └── Show why a message was delivered, delayed, suppressed, or expired
 
 v0.9.6 — Driver Coaching Module               🔴 Unimplemented / unvalidated
