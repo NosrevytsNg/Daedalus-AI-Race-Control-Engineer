@@ -54,6 +54,8 @@ def parse_header(data):
         "secondary_player_car_index": values[11],
     }
 
+
+
 # ================================================================
 # Car Telemetry Packet (Packet ID 6)
 

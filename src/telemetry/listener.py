@@ -41,7 +41,12 @@ def start_listener():
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # "socket.AF_INET" = IPv4 Networking | "socket.sock_DGRAM" = UDP (DataGRAM)
     sock.bind((UDP_IP, UDP_PORT))                           # Instruct window to send all data from Port 20777 to this Python Progame
-    sock.settimeout(1.0)                                    # 
+    sock.settimeout(1.0)                                    # Timeout Settings (1s)
+
+    # The timeout setting is used in conjuction with the exception condition for "data, address = sock.recvfrom(BUFFER_SIZE)" LINE 85
+    # The purpose of "sock.settimeout(1.0)" & "except socket.timeout: continue" is to stop UDP Receiver from getting stuck in an infinite loop
+    # Without timeout: "The guard waits at the door forever until a UDP Packet knocks"
+    # With timeout: "The guard waits at the door for a UDP Packet knocks for 1s, does something else then checks on the door again"
 
 # ============================ Variable List =================================================
 
