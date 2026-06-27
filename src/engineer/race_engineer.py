@@ -776,10 +776,14 @@ def select_radio_phrase(delivery_group, fallback_text):
 #     )
 
 #     return sort_engineer_messages(delivery_messages)
+def get_message_delivery_group(message):
+    if message.get("delivery_group") is not None:
+        return message["delivery_group"]
+
+    return get_delivery_group(message)
 
 def get_radio_queue_size():
     return len(radio_message_queue)
-
 
 def prepare_delivery_messages(engineer_messages):
     global active_delivery_groups
@@ -835,6 +839,7 @@ def prepare_delivery_messages(engineer_messages):
                 "text": radio_text,
                 "source_text": message["text"],
                 "created_at": current_time,
+                "expires_at": expires_at,
             }
         )
 
