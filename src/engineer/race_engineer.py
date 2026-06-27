@@ -142,6 +142,91 @@ last_radio_delivery_time = 0
 
 RADIO_DELIVERY_COOLDOWN_SECONDS = 4.0
 
+last_radio_priority = None
+RADIO_MIN_INTERRUPT_GAP_SECONDS = 1.0
+
+NON_ESSENTIAL_RADIO_GROUPS = {
+    "drs_available",
+    "rain_possible",
+    "floor_damage_low",
+    "sidepod_damage_low",
+    "diffuser_damage_low",
+}
+
+RADIO_MESSAGE_LIFETIME_SECONDS = {
+    "drs_available": 3.0,
+    "rain_possible": 30.0,
+    "rain_expected": 45.0,
+    "ers_low": 10.0,
+    "fuel_marginal": 12.0,
+    "tyre_wear_high": 15.0,
+    "tyre_damage_detected": 15.0, 
+    "floor_damage_low": 8.0,
+    "sidepod_damage_low": 8.0,
+    "diffuser_damage_low": 8.0,
+}
+
+def get_radio_message_lifetime_seconds(delivery_group, priority):
+    if priority == "CRITICAL":
+        return None
+    
+    if delivery_group in RADIO_MESSAGE_LIFETIME_SECONDS:
+        return RADIO_MESSAGE_LIFETIME_SECONDS[delivery_group]
+    
+    if priority == "HIGH":
+        return 20.0
+    
+    if priority == "MEDIUM":
+        return 15.0
+    
+    return 8.0
+
+def is_radio_message_expired(message, current_time):
+    expires_at = message.get("expires_at")
+
+    if expires_at is None:
+        return False
+    
+    return current_time >= expires_at
+
+def should_supress_radio_message(message, active_engineer_messages):
+    priority = message.get("priority")
+    delivery_group = get_delivery_group(message)
+
+    critical_active = any(
+        active_message.get("priority") == "CRITICAL"
+        for active_message in active_engineer_messages
+    )
+
+    high_active = any(
+        active_message.get("priority") == "HIGH"
+        for active_message in active_engineer_messages
+    )
+
+    if critical_active and priority in ("MEIDUM", "LOW", "INFO"):
+        return True
+    
+    if high_active and priority in ("LOW", "INFO"):
+        return True
+    if critical_active and delivery_group in NON_ESSENTIAL_RADIO_GROUPS:
+        return True
+    
+    return False
+
+def can_interrupt_radio_cooldown(message, time_since_last_delivery):
+    priority = message.get("priority")
+
+    if priority == "CRITICAL":
+        return True
+    
+    if priority == "HIGH":
+        if time_since_last_delivery < RADIO_MIN_INTERRUPT_GAP_SECONDS:
+            return False
+        
+        return last_radio_priority in ("LOW", "INFO", None)
+    
+    return False
+
 
 DELIVERY_CONTEXT_GROUPS = {
     # Front wing damage
@@ -172,17 +257,17 @@ DELIVERY_CONTEXT_GROUPS = {
     "ers_low": "ers_low",
 
     # Damage
-    "floor_damage_low": "floor_damage_low,",
+    "floor_damage_low": "floor_damage_low",
     "floor_damage_medium": "floor_damage_medium",
     "floor_damage_high": "floor_damage_high",
     "floor_damage_critical": "floor_damage_critical",
     
-    "sidepod_damage_low": "sidepod_damage_low,",
+    "sidepod_damage_low": "sidepod_damage_low",
     "sidepod_damage_medium": "sidepod_damage_medium",
     "sidepod_damage_high": "sidepod_damage_high",
     "sidepod_damage_critical": "sidepod_damage_critical",
 
-    "diffuser_damage_low": "diffuser_damage_low,",
+    "diffuser_damage_low": "diffuser_damage_low",
     "diffuser_damage_medium": "diffuser_damage_medium",
     "diffuser_damage_high": "diffuser_damage_high",
     "diffuser_damage_critical": "diffuser_damage_critical",
@@ -700,6 +785,7 @@ def prepare_delivery_messages(engineer_messages):
     global active_delivery_groups
     global radio_message_queue
     global last_radio_delivery_time
+    global last_radio_priority
 
     current_time = time.time()
 
@@ -719,6 +805,9 @@ def prepare_delivery_messages(engineer_messages):
 
         # If this situation is already active or already queued,
         # do not add it again.
+        if should_supress_radio_message(message, engineer_messages):
+            continue
+
         if delivery_group in queued_or_active_groups:
             continue
 
@@ -726,6 +815,16 @@ def prepare_delivery_messages(engineer_messages):
             delivery_group,
             message["text"]
         )
+
+        lifetime_seconds = get_radio_message_lifetime_seconds(
+            delivery_group,
+            message["priority"]
+        )
+
+        if lifetime_seconds is None:
+            expires_at = None
+        else:
+            expires_at = current_time = lifetime_seconds
 
         radio_message_queue.append(
             {
@@ -755,7 +854,8 @@ def prepare_delivery_messages(engineer_messages):
     # has not been delivered yet.
     radio_message_queue = [
         message for message in radio_message_queue
-        if message["delivery_group"] in current_delivery_groups
+        if (message["delivery_group"] in current_delivery_groups
+        and not is_radio_message_expired(message, current_time))
     ]
 
     # Step 4:
@@ -770,18 +870,27 @@ def prepare_delivery_messages(engineer_messages):
     # Step 6:
     # Cooldown control.
     # Do not speak too many radio messages back-to-back.
+    next_message = radio_message_queue[0]
+
     time_since_last_delivery = current_time - last_radio_delivery_time
 
-    if (
+    cooldown_active = (
         last_radio_delivery_time != 0
         and time_since_last_delivery < RADIO_DELIVERY_COOLDOWN_SECONDS
-    ):
-        return []
+    )
+
+    if cooldown_active:
+        if not can_interrupt_radio_cooldown(
+            next_message,
+            time_since_last_delivery
+        ):
+            return []
 
     # Step 7:
     # Release only one message.
     next_message = radio_message_queue.pop(0)
     last_radio_delivery_time = current_time
+    last_radio_priority = next_message["priority"]
 
     return [next_message]
 
