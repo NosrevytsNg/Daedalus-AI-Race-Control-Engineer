@@ -43,3 +43,13 @@ time.sleep(4.2)
 print("TEST 4: ERS low after cooldown")
 print(prepare_delivery_messages([ers_low]))
 print("queue:", get_radio_queue_size())
+
+print("TEST 5: DRS expiry")
+
+prepare_delivery_messages([drs_available])
+print("queue after DRS input:", get_radio_queue_size())
+
+time.sleep(3.5)
+
+print(prepare_delivery_messages([drs_available]))
+print("queue after expiry check:", get_radio_queue_size())
