@@ -1,19 +1,37 @@
-import socket
-import time
-from datetime import datetime
+# [listener.py] functions as a LIVE telemetry coordinator, and a traffic controller
+# 
+# 1. Receives UDP Packet from F1 game
+# 2. Asks [parser.py] to identify (packetID) and decode the UDP Packets
+# 3. Stores the latest decoded data
+# 4. Sends the latest daat to [display.py]
+# 5. Sends completed lap captures to [telemetry_logger.py]
+
+
+import socket                      # Allows Python to listen for UDP Packets
+import time                        # Used to control refresh rate of Dashboard
+from datetime import datetime      # Used for Timestamp (Messages, Logs and Events)
+
+# Sends latest stored or LIVE telemetry info to Dashboard
 from src.telemetry.display import display_live_telemetry
 
+# Consults parser.py about decoding each packet type
 from src.telemetry.parser import (parse_header, parse_car_telemetry, parse_lap_data, 
                                   parse_session_history, parse_car_status, CompletedLapSectorTiming, 
                                   parse_session_data, parse_car_damage, parse_tyre_sets,)
+
+# Align with project's packet dictionary (packets.py)
 from src.telemetry.packets import (PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET_ID_LAP_DATA, 
                                    PACKET_ID_SESSION_HISTORY, PACKET_ID_CAR_STATUS, PACKET_ID_SESSION, 
                                    PACKET_ID_CAR_DAMAGE,PACKET_ID_TYRE_SETS,)
+
+# Save completed laps to CSV
 from src.telemetry.telemetry_logger import (TelemetryLogger)
 
-UDP_IP = "0.0.0.0"
+
+# UDP_IP = "0.0.0.0" # Potential security risk (Traffic originating from ANY network)
+UDP_IP = "127.0.0.1" # Traffic originating from LOCAL computer
 UDP_PORT = 20777
-BUFFER_SIZE = 4096
+BUFFER_SIZE = 4096 # Packet size limit
 
 
 def start_listener():
@@ -21,9 +39,9 @@ def start_listener():
     print(f"Listening on UDP port {UDP_PORT}...")
     print("Waiting for F1 telemetry packets...\n")
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind((UDP_IP, UDP_PORT))
-    sock.settimeout(1.0)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # "socket.AF_INET" = IPv4 Networking | "socket.sock_DGRAM" = UDP (DataGRAM)
+    sock.bind((UDP_IP, UDP_PORT))                           # Instruct window to send all data from Port 20777 to this Python Progame
+    sock.settimeout(1.0)                                    # 
 
 # ============================ Variable List =================================================
 
@@ -94,11 +112,18 @@ def start_listener():
 
                     # Added for previous sector timing records
                     if new_lap_data is not None:
+
+                        # If the new and previous lap data is stored, and there is a greater number of new laps vs previous laps,
+                        # then the previous lap has just ended.
+                        # Please Proceed
+
                         if(
                             previous_lap_num is not None
                             and new_lap_data.current_lap_num > previous_lap_num
                             and latest_lap_data is not None
                         ):
+                            # Sector 3 timing is removed when a new lap takes place.
+                            # Sector 3 = Full Lap - S1 - S2
                             sector_1 = latest_lap_data.sector_1_time_ms
                             sector_2 = latest_lap_data.sector_2_time_ms
                             sector_3 = latest_lap_data.current_lap_time_ms - sector_1 - sector_2
@@ -114,6 +139,7 @@ def start_listener():
                         previous_lap_num = new_lap_data.current_lap_num
                         latest_lap_data = new_lap_data
 
+                        # Sends current session UID and latest available state to logger   
                         if latest_completed_lap_sectors is not None:        
                             telemetry_logger.log_lap_capture(
                                 current_session_uid,
