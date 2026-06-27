@@ -99,7 +99,7 @@ def start_listener():
                 #    f"[{timestamp}] Packet received from "
                 #    f"Packet {packet_id} | ({packet_name}) | "
                 #    f"Format: {header['packet_format']} | "
-                #   f"Player Car {header['player_car_index']} | "
+                #    f"Player Car {header['player_car_index']} | "
                 #    f"Size: {len(data)} bytes"
                 #    f"{address[0]}:{address[1]} | Size: {len(data)} bytes")
                 # ============================================================
