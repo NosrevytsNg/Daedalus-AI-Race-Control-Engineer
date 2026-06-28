@@ -170,16 +170,28 @@ v0.9.5 — Radio Behavioural Intelligence (Control / Anti-Spam Refinement) 🟡 
 
 v0.9.6 — Driver Coaching Module               🔴 Unimplemented / unvalidated
 │
-├── A. Coaching Message Builder               🔴 Unimplemented / unvalidated
+├── A. Coaching Message Builder               🟡 Implemented / partially validated
 │   └── Convert performance findings into driver advice
 │
-├── B. Sector-Based Coaching                  🔴 Unimplemented / unvalidated
+├── B. Sector-Based Coaching                  🟡 Implemented / partially validated
 │   └── Give advice based on where time is lost
 │
-├── C. Consistency Coaching                   🔴 Unimplemented / unvalidated
+├── C. Consistency Coaching                   🟡 Implemented / partially validated
 │   └── Coach smoothness and repeatability across laps
 │
-└── D. Tyre/ERS/Fuel Driving Style Coaching   🔴 Unimplemented / unvalidated
+├── D. Tyre/ERS/Fuel Driving Style Coaching   🔴 Unimplemented / unvalidated
+│   └── Coach behaviour based on wear, battery, and fuel patterns
+│
+├── E. Sector 3 Awareness                     🔴 Unimplemented / unvalidated
+│   └── Convert performance findings into driver advice
+│
+├── F. Micro-Sector Timing Engine             🔴 Unimplemented / unvalidated
+│   └── Give advice based on where time is lost
+│
+├── G. Track Corner Mapping                   🔴 Unimplemented / unvalidated
+│   └── Coach smoothness and repeatability across laps
+│
+└── H. Corner-Specific Driver Coaching        🔴 Unimplemented / unvalidated
     └── Coach behaviour based on wear, battery, and fuel patterns
 
 
