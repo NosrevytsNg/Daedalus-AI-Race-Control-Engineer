@@ -252,6 +252,8 @@ DELIVERY_CONTEXT_GROUPS = {
     # Fuel
     "fuel_critical": "fuel_critical",
     "fuel_marginal": "fuel_marginal",
+    "fuel_deficit": "fuel_deficit",
+    "fuel_close": "fuel_close",
 
     # ERS
     "ers_critical": "ers_critical",
@@ -340,6 +342,18 @@ RADIO_PHRASES = {
         "Fuel is marginal. Start some lift and coast.",
         "We need a bit of fuel saving. Manage consumption.",
         "Fuel is close to the limit. Save where possible.",
+    ],
+
+    "fuel_deficit": [
+        "Fuel deficit. Start saving where possible.",
+        "We are slightly short on fuel. Lift and coast where you can.",
+        "Fuel is below target. Manage consumption.",
+    ],
+
+    "fuel_close": [
+        "Fuel is close to target. Keep it tidy.",
+        "Fuel is tight but still positive.",
+        "Fuel margin is small. Avoid unnecessary burn.",
     ],
 
     "ers_critical": [
@@ -971,14 +985,19 @@ def get_fuel_warnings(latest_car_status):
 
     fuel_laps = latest_car_status.fuel_remaining_laps
 
-    if fuel_laps < 0.2:
+    if fuel_laps <= -0.50:
         warnings.append(
-            "Fuel critical"
+            f"Fuel critical ({fuel_laps:+.2f} laps)"
         )
 
-    elif fuel_laps < 0.5:
+    elif fuel_laps < 0:
         warnings.append(
-            "Fuel marginal"
+            "Fuel deficit ({fuel_laps:+.2f} laps)"
+        )
+
+    elif fuel_laps <= 0.20:
+        warnings.append(
+            "Fuel close to target ({fuel_laps:+.2f} laps)"
         )
 
     return warnings
@@ -1241,23 +1260,33 @@ def config_engineer_messages(
     if latest_car_status is not None:
         fuel_laps = latest_car_status.fuel_remaining_laps
 
-        if fuel_laps < 2:
+        if fuel_laps <= -0.50 :
             messages.append(
                 make_engineer_message(
                     "CRITICAL",
                     "fuel",
                     "fuel_critical",
-                    "Fuel critical"
+                    f"Fuel critical ({fuel_laps: +.2f} laps"
                 )
             )
 
-        elif fuel_laps < 5:
+        elif fuel_laps < 0:
             messages.append(
                 make_engineer_message(
-                    "MEDIUM",
+                    "HIGH",
                     "fuel",
-                    "fuel_marginal",
-                    "Fuel marginal"
+                    "fuel_deficit",
+                    f"Fuel deficit ({fuel_laps: +.2f} laps)"
+                )
+            )    
+
+        elif fuel_laps <= 0.20:
+            messages.append(
+                make_engineer_message(
+                    "LOW",
+                    "fuel",
+                    "fuel_close",
+                    f"Fuel close to target ({fuel_laps: +.2f} laps"
                 )
             )
 
@@ -1832,19 +1861,24 @@ def get_fuel_management_advice(latest_car_status):
 
     fuel_laps = latest_car_status.fuel_remaining_laps
 
-    if fuel_laps < 0:
+    if fuel_laps <= -0.50:
         advice.append(
-            "Fuel deficit - lift and coast"
+            f"Fuel critical ({fuel_laps:+.2f}) - lift and coast immediately"
         )
 
-    elif fuel_laps < 1:
+    elif fuel_laps < 0:
         advice.append(
-            "Fuel marginal - short shift and save fuel"
+            f"Fuel deficit ({fuel_laps:+.2f}) - lift and coast where possible"
         )
 
-    elif fuel_laps > 3:
+    elif fuel_laps <= 0.20:
         advice.append(
-            "Fuel surplus - push if needed"
+            f"Fuel close to target ({fuel_laps:+.2f}) - avoid unnecessary burn"
+        )
+
+    elif fuel_laps >= 2.00:
+        advice.append(
+            f"Fuel surplus ({fuel_laps:+.2f}) - push if needed"
         )
 
     return advice        

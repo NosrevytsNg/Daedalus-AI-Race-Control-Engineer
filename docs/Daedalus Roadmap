@@ -167,9 +167,25 @@ v0.9.5 — Radio Behavioural Intelligence (Control / Anti-Spam Refinement) 🟡 
 └── E. Radio Behaviour Debug 🟡 Implemented / partially validated
     └── Show why a message was delivered, delayed, suppressed, or expired
 
+
 v0.9.6 — Driver Coaching Module               🔴 Unimplemented / unvalidated
+│
+├── A. Coaching Message Builder               🔴 Unimplemented / unvalidated
+│   └── Convert performance findings into driver advice
+│
+├── B. Sector-Based Coaching                  🔴 Unimplemented / unvalidated
+│   └── Give advice based on where time is lost
+│
+├── C. Consistency Coaching                   🔴 Unimplemented / unvalidated
+│   └── Coach smoothness and repeatability across laps
+│
+└── D. Tyre/ERS/Fuel Driving Style Coaching   🔴 Unimplemented / unvalidated
+    └── Coach behaviour based on wear, battery, and fuel patterns
+
+
 v0.9.7 — Race State Memory                    🔴 Unimplemented / unvalidated
 v0.9.8 — AI Engineer Radio Planner            🔴 Unimplemented / unvalidated
+
 
 
 Phase 9: Voice
