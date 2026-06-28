@@ -5,6 +5,9 @@ from collections import deque
 recent_valid_laps = deque(maxlen=5)
 last_consistency_lap_logged = None
 
+last_coaching_lap_by_context = {}
+last_coaching_time_by_context = {}
+
 SESSION_MODE_UNKNOWN = "unknown"
 SESSION_MODE_PRACTICE = "practice"
 SESSION_MODE_QUALIFYING = "qualifying"
@@ -151,6 +154,11 @@ NON_ESSENTIAL_RADIO_GROUPS = {
     "floor_damage_low",
     "sidepod_damage_low",
     "diffuser_damage_low",
+    "coach_reset_rhythm",
+    "coach_sector_s1",
+    "coach_sector_s2",
+    "coach_consistency_variable",
+    "coach_consistency_inconsistent",
 }
 
 RADIO_MESSAGE_LIFETIME_SECONDS = {
@@ -164,6 +172,11 @@ RADIO_MESSAGE_LIFETIME_SECONDS = {
     "floor_damage_low": 8.0,
     "sidepod_damage_low": 8.0,
     "diffuser_damage_low": 8.0,
+    "coach_reset_rhythm": 20.0,
+    "coach_sector_s1": 20.0,
+    "coach_sector_s2": 20.0,
+    "coach_consistency_variable": 25.0,
+    "coach_consistency_inconsistent": 25.0,
 }
 
 def get_radio_message_lifetime_seconds(delivery_group, priority):
@@ -287,6 +300,13 @@ DELIVERY_CONTEXT_GROUPS = {
     "safety_car": "safety_car",
     "virtual_safety_car": "virtual_safety_car",
     "formation_lap": "formation_lap",
+
+    # Driver coaching
+    "coach_reset_rhythm": "coach_reset_rhythm",
+    "coach_sector_s1": "coach_sector_s1",
+    "coach_sector_s2": "coach_sector_s2",
+    "coach_consistency_variable": "coach_consistency_variable",
+    "coach_consistency_inconsistent": "coach_consistency_inconsistent",
 }
 
 
@@ -480,6 +500,36 @@ RADIO_PHRASES = {
         "Formation lap. Build tyre temperature.",
         "Formation lap underway. Warm the tyres and brakes.",
         "Formation lap. Prepare the car for the start.",
+    ],
+
+    "coach_reset_rhythm": [
+        "Reset the rhythm. Focus on a clean lap.",
+        "Take a reset lap mentally. Build the pace back up.",
+        "Focus on rhythm now. Clean inputs, clean exits.",
+    ],
+
+    "coach_sector_s1": [
+        "Focus on Sector 1. Prioritise braking stability and clean exits.",
+        "Time loss is mainly Sector 1. Keep the entry stable and avoid overdriving.",
+        "Sector 1 needs attention. Brake cleanly and focus on traction out.",
+    ],
+
+    "coach_sector_s2": [
+        "Focus on Sector 2. Keep the rhythm smooth through the middle sector.",
+        "Most time loss is in Sector 2. Prioritise clean exits and avoid sliding.",
+        "Sector 2 is costing time. Keep it smooth and build momentum corner to corner.",
+    ],
+
+    "coach_consistency_variable": [
+        "Pace is varying. Prioritise repeatable laps over peak pace.",
+        "Focus on consistency. Same braking points, same exits.",
+        "Lap times are moving around. Build a cleaner rhythm.",
+    ],
+
+    "coach_consistency_inconsistent": [
+        "Pace is inconsistent. Slow it down slightly and rebuild control.",
+        "Consistency is the target now. Keep the car tidy and repeat the lap.",
+        "Focus on repeatability. Do not chase the lap time too hard.",
     ],
 }
 
@@ -1217,14 +1267,20 @@ def config_engineer_messages(
         max_damage = max(latest_car_damage.tyre_damage)
 
         if max_damage >= 80:
-            messages.append(
-                make_engineer_message(
-                    "CRITICAL",
-                    "tyre",
-                    "tyre_damage_critical",
-                    "CRITICAL TYRE DAMAGE - BOX NOW"
-                )
-            )
+            hello = make_engineer_message(
+                        "CRITICAL",
+                        "tyre",
+                        "tyre_damage_critical",
+                        "CRITICAL TYRE DAMAGE - BOX NOW"
+                    )
+            messages.append(hello)
+            #     make_engineer_message(
+            #         "CRITICAL",
+            #         "tyre",
+            #         "tyre_damage_critical",
+            #         "CRITICAL TYRE DAMAGE - BOX NOW"
+            #     )
+            # )
 
         elif max_damage >= 50:
             messages.append(
@@ -2097,6 +2153,184 @@ def analyze_driver_performance(
         analysis["message"].append(message)        
 
     return analysis
+
+def make_coaching_message(priority, context, text):
+    return make_engineer_message(
+        priority,
+        "coaching",
+        context,
+        text,
+    )
+
+def should_emit_lap_coaching_message(context, completed_lap_num, min_lap_between=2):
+    if completed_lap_num is not None:
+        return False
+    
+    last_lap = last_coaching_lap_by_context.get(context)
+
+    if last_lap is not None:
+        laps_since_last = completed_lap_num - last_lap
+
+        if laps_since_last < min_lap_between:
+            return False
+        
+    last_coaching_lap_by_context[context] = completed_lap_num
+    return True
+
+
+def generate_driver_coaching(
+    performance_analysis,
+    latest_lap_data,
+    latest_session_history,
+    latest_car_damage=None,
+    latest_session_data=None,
+):
+    coaching_messages = []
+
+    if performance_analysis is None:
+        return coaching_messages
+
+    if latest_lap_data is None or latest_session_history is None:
+        return coaching_messages
+
+    if is_safety_car_active(latest_session_data):
+        return coaching_messages
+
+    if is_major_damage_for_performance(latest_car_damage):
+        return coaching_messages
+
+    lap_comparison = performance_analysis.get("lap_comparison")
+
+    if lap_comparison is not None:
+        lap_delta = lap_comparison.get("lap_delta")
+
+        if lap_delta is not None:
+            completed_lap_num = get_completed_lap_num(latest_lap_data)
+
+            if completed_lap_num is None:
+                return coaching_messages
+
+            if lap_delta >= 3000:
+                if should_emit_coaching_message(
+                    "coach_reset_rhythm",
+                    completed_lap_num,
+                    min_laps_between=3,
+                ):
+                    coaching_messages.append(
+                        make_coaching_message(
+                            "LOW",
+                            "coach_reset_rhythm",
+                            "Last lap was well off your best. Reset the rhythm and focus on a clean lap."
+                        )
+                    )
+
+            elif lap_delta >= 2000:
+                if should_emit_coaching_message(
+                    "coach_reset_rhythm",
+                    completed_lap_num,
+                    min_laps_between=3,
+                ):
+                    coaching_messages.append(
+                        make_coaching_message(
+                            "LOW",
+                            "coach_reset_rhythm",
+                            "Last lap was slower than your best. Focus on rhythm and clean exits."
+                        )
+                    )
+
+    sector_comparison = performance_analysis.get("sector_comparison")
+
+    if sector_comparison is not None:
+        worst_sec = sector_comparison.get("worst_sec")
+        worst_sec_delta = sector_comparison.get("worst_sec_delta")
+
+        if worst_sec_delta is not None and worst_sec_delta >= 300:
+            priority = "MEDIUM" if worst_sec_delta >= 1000 else "LOW"
+
+            if worst_sec == "S1":
+                if should_emit_coaching_message(
+                    "coach_sector_s1",
+                    completed_lap_num,
+                    min_laps_between=2,
+                ):
+                    coaching_messages.append(
+                        make_coaching_message(
+                            priority,
+                            "coach_sector_s1",
+                            f"Focus on Sector 1. You are losing {worst_sec_delta / 1000:.3f}s there. Prioritise braking stability and clean exits."
+                        )
+                    )
+
+            elif worst_sec == "S2":
+                if should_emit_coaching_message(
+                    "coach_sector_s2",
+                    completed_lap_num,
+                    min_laps_between=2,
+                ):
+                    coaching_messages.append(
+                        make_coaching_message(
+                            priority,
+                            "coach_sector_s2",
+                            f"Focus on Sector 2. You are losing {worst_sec_delta / 1000:.3f}s there. Keep the rhythm smooth and prioritise corner exits."
+                        )
+                    )
+
+    consistency = performance_analysis.get("consistency")
+
+    if consistency is not None:
+        metrics = consistency.get("metrics")
+
+        if metrics is not None:
+            status = metrics.get("status")
+
+            if status == "variable":
+                coaching_messages.append(
+                    make_coaching_message(
+                        "LOW",
+                        "coach_consistency_variable",
+                        "Pace variation detected. Prioritise repeatable laps over peak lap time."
+                    )
+                )
+
+            elif status == "inconsistent":
+                coaching_messages.append(
+                    make_coaching_message(
+                        "MEDIUM",
+                        "coach_consistency_inconsistent",
+                        "Pace is inconsistent. Focus on cleaner inputs and repeatable braking points."
+                    )
+                )
+
+    return sort_engineer_messages(coaching_messages)[:2]
+
+def should_emit_coaching_message(
+    context,
+    completed_lap_num,
+    min_laps_between=2,
+    min_seconds_between=60,
+):
+    current_time = time.time()
+
+    last_lap = last_coaching_lap_by_context.get(context)
+    last_time = last_coaching_time_by_context.get(context)
+
+    if last_lap is not None:
+        laps_since_last = completed_lap_num - last_lap
+
+        if laps_since_last < min_laps_between:
+            return False
+
+    if last_time is not None:
+        seconds_since_last = current_time - last_time
+
+        if seconds_since_last < min_seconds_between:
+            return False
+
+    last_coaching_lap_by_context[context] = completed_lap_num
+    last_coaching_time_by_context[context] = current_time
+
+    return True
+
 
 def get_completed_lap_num(latest_lap_data):
     if latest_lap_data is None:

@@ -1,7 +1,7 @@
 import os
 
 from src.telemetry.parser import format_time_ms
-from src.engineer.race_engineer import config_engineer_messages, suggest_pit_window, config_strategy_advice, analyze_driver_performance, prepare_delivery_messages, get_radio_queue_size
+from src.engineer.race_engineer import config_engineer_messages, suggest_pit_window, config_strategy_advice, analyze_driver_performance, generate_driver_coaching, prepare_delivery_messages, get_radio_queue_size
 from src.voice.tts import speak_radio_message
 
 # Clear the console  
@@ -539,43 +539,43 @@ def display_live_telemetry(latest_telemetry,
 
     delivery_messages = prepare_delivery_messages(engineer_messages)
 
-    print()
-    print("----------------------------------------------------")
-    print("RADIO DELIVERY DEBUG")
-    print("----------------------------------------------------")
+    # print()
+    # print("----------------------------------------------------")
+    # print("RADIO DELIVERY DEBUG")
+    # print("----------------------------------------------------")
 
-    if delivery_messages:
-        for message in delivery_messages:
-            print(
-                f"[{message['priority']}] "
-                f"({message['delivery_group']}) "
-                f"{message['text']}"
-            )
+    # if delivery_messages:
+    #     for message in delivery_messages:
+    #         print(
+    #             f"[{message['priority']}] "
+    #             f"({message['delivery_group']}) "
+    #             f"{message['text']}"
+    #         )
 
-            speak_radio_message(message["text"])
-    else:
-        print("No new radio messages")
+    #         speak_radio_message(message["text"])
+    # else:
+    #     print("No new radio messages")
 
-    print(f"Radio Queue: {get_radio_queue_size()} pending")       
+    # print(f"Radio Queue: {get_radio_queue_size()} pending")       
 
-    strategy_advice = config_strategy_advice(
-        latest_lap_data,
-        latest_car_status,
-        latest_car_damage,
-        latest_session_data,
-        latest_tyre_sets,
-    )
+    # strategy_advice = config_strategy_advice(
+    #     latest_lap_data,
+    #     latest_car_status,
+    #     latest_car_damage,
+    #     latest_session_data,
+    #     latest_tyre_sets,
+    # )
 
-    print()
-    print("----------------------------------------------------")
-    print("STRATEGY ADVISOR")
-    print("----------------------------------------------------")
+    # print()
+    # print("----------------------------------------------------")
+    # print("STRATEGY ADVISOR")
+    # print("----------------------------------------------------")
 
-    if strategy_advice:
-        for message in strategy_advice:
-            print(f"- {message}")
-    else:
-        print("No strategic action required")
+    # if strategy_advice:
+    #     for message in strategy_advice:
+    #         print(f"- {message}")
+    # else:
+    #     print("No strategic action required")
         
         
 #========================================================================================
@@ -596,6 +596,54 @@ def display_live_telemetry(latest_telemetry,
             print(f"- {message}")
     else:
         print("Not enough lap data yet")
+
+#========================================================================================
+
+    coaching_messages = generate_driver_coaching(
+        performance_analysis,
+        latest_lap_data,
+        latest_session_history,
+        latest_car_damage,
+        latest_session_data,
+    )
+
+    print()
+    print("----------------------------------------------------")
+    print("DRIVER COACHING")
+    print("----------------------------------------------------")
+
+    if coaching_messages:
+        for message in coaching_messages:
+            print(
+                f"[{message['priority']}] "
+                f"({message['context']}) "
+                f"{message['text']}"
+            )
+    else:
+        print("No coaching advice yet")
+
+    radio_candidates = engineer_messages + coaching_messages
+
+    delivery_messages = prepare_delivery_messages(radio_candidates)
+
+    print()
+    print("----------------------------------------------------")
+    print("RADIO DELIVERY DEBUG")
+    print("----------------------------------------------------")
+
+    if delivery_messages:
+        for message in delivery_messages:
+            print(
+                f"[{message['priority']}] "
+                f"({message['delivery_group']}) "
+                f"{message['text']}"
+            )
+
+            speak_radio_message(message["text"])
+    else:
+        print("No new radio messages")
+
+    print(f"Radio Queue: {get_radio_queue_size()} pending")
 
 
 
