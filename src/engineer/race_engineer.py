@@ -2510,7 +2510,20 @@ def analyze_consistency(latest_lap_data, latest_session_history, latest_car_dama
         "laps": list(recent_valid_laps),
     }
 
-    lap_count = result["metrics"]["lap_count"]
+    lap_count = result["metrics"]["lap_count"] # <-- question
+    # ======================================================================================
+    # result = {
+    #     "enabled": True,   # Whether the analysis is allowed in the current session
+    #     "recorded": False, # Whether the current lap will be added to the recent lap list
+    #     "reason": None,    # Why the analysis took place or did not take place
+    #     "metrics": None,   # The calculated numbers
+    #     "messages": [],    # The readable output
+    # }
+    # consistency = performance_analysis.get("consistency")
+    # metrics = consistency.get("metrics")
+    # lap_count = metrics.get("lap_count")
+    # ======================================================================================
+
     lap_range_seconds = lap_range / 1000
     standard_deviation_seconds = standard_deviation / 1000
 
