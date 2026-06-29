@@ -2390,24 +2390,24 @@ def get_consistency_thresholds(latest_session_data):
     session_mode = get_session_mode(latest_session_data)
 
     if session_mode == SESSION_MODE_TIME_TRIAL:
-        return {"consistent": 400, "variable": 1000,}
+        return {"consistent": 400, "variable": 1000,} # 0.400s and 1.000s
     
     if session_mode == SESSION_MODE_PRACTICE:
-        return {"consistent": 900, "variable": 1800,}
+        return {"consistent": 900, "variable": 1800,} # 0.900s and 1.800s
     
     if session_mode == SESSION_MODE_RACE:
-        return {"consistent": 750, "variable": 1500,}
+        return {"consistent": 750, "variable": 1500,} # 0.750s and 1.500s
 
 
 def analyze_consistency(latest_lap_data, latest_session_history, latest_car_damage=None, latest_session_data=None,):
     global last_consistency_lap_logged
 
     result = {
-        "enabled": True,
-        "recorded": False,
-        "reason": None,
-        "metrics": None,
-        "messages": [],
+        "enabled": True,   # Whether the analysis is allowed in the current session
+        "recorded": False, # Whether the current lap will be added to the recent lap list
+        "reason": None,    # Why the analysis took place or did not take place
+        "metrics": None,   # The calculated numbers
+        "messages": [],    # The readable output
     }
 
     if latest_lap_data is None or latest_session_history is None:
@@ -2427,27 +2427,36 @@ def analyze_consistency(latest_lap_data, latest_session_history, latest_car_dama
         result["reason"] = "Car damage affecting lap time"
         return result
     
-    completed_lap_num = get_completed_lap_num(latest_lap_data)
-    last_lap = latest_lap_data.last_lap_time_ms
-    best_lap = latest_session_history.best_lap_time_ms
+    # No lap data yet         -> "enabled" = True  -> Analysis allowed, but data is missing
+    # No session history yet  -> "enabled" = True  -> Analysis allowed, but comparison data is missing
+    # Safety Car/VSC          -> "enabled" = True  -> Analysis allowed, but temporarily paused
+    # Major damage            -> "enabled" = True  -> Analysis allowed, but lap timing not useful
+    # Invalid lap time        -> "enabled" = True  -> Analysis allowed, but this lap is unstable
+    # Duplicate laps          -> "enabled" = True  -> Analysis allowed, but lap already recorded
+    # Quali or Supported Mode -> "enabled" = False -> Analysis disabled, as not necessary
 
-    if completed_lap_num is None or completed_lap_num <= 0:
+    
+    completed_lap_num = get_completed_lap_num(latest_lap_data) # Current number of laps - 1
+    last_lap = latest_lap_data.last_lap_time_ms                # The time of the most recently completed lap
+    best_lap = latest_session_history.best_lap_time_ms         # Time of best lap in this race/session
+
+    if completed_lap_num is None or completed_lap_num <= 0: # no completed lap = no consistency analysis yet.
         result["reason"] = "No completed laps"
         return result
     
-    if last_lap is None or best_lap is None:
+    if last_lap is None or best_lap is None: # no lap times = no comparison = no consistency analysis
         result["reason"] = "Missing lap times"
         return result
     
-    if last_lap <= 0 or best_lap <= 0:
+    if last_lap <= 0 or best_lap <= 0: # cannot have negative laps
         result["reason"] = "Invalid lap time"
         return result
     
-    if last_consistency_lap_logged == completed_lap_num:
+    if last_consistency_lap_logged == completed_lap_num: # avoids recorded the same lap twice, due to multiple refreshes per second
         result["reason"] = "Lap already recorded"
         return result
     
-    if last_lap > best_lap * 1.10:
+    if last_lap > best_lap * 1.10: # ignores laps more than 10% slower than best -> Pits, spins, crashes or safety car lap
         result["reason"]  = "Outlier lap ignored"
         return result
     
@@ -2456,40 +2465,43 @@ def analyze_consistency(latest_lap_data, latest_session_history, latest_car_dama
     recent_valid_laps.append(
         {
             "lap_num": completed_lap_num,
-            "lap_time_ms": last_lap, # <== Typo
+            "lap_time_ms": last_lap, # <== Typo (lap_time_ms ✅ vs lap_times_ms)
             "delta_to_best_ms": last_lap - best_lap,
         }
     )
 
+    # ^
+    # saves laps into "recent_valid_lap" with a history limit of 5 valid laps (deque(maxlen=5))
+
     result["recorded"] = True
     result["reason"] = "Lap recorded"
 
-    if len(recent_valid_laps) < 3:
+    if len(recent_valid_laps) < 3: # waits for a minimum of 3 laps before conducting the consistency analysis
         result["reason"] = "Waiting for more valid laps"
         return result
     
     lap_times = [
-        lap["lap_time_ms"] # <== Typo
-        for lap in recent_valid_laps
+        lap["lap_time_ms"] # <== Typo (lap_time_ms ✅ vs lap_times_ms)
+        for lap in recent_valid_laps # converts the stored lap dictionaries into a simple list of lap times
     ]
 
-    lap_range = max(lap_times) - min(lap_times)
-    avg_lap = sum(lap_times) / len(lap_times)
+    lap_range = max(lap_times) - min(lap_times) # consistency metrics (distance between best recent lap and worst recent lap)
+    avg_lap = sum(lap_times) / len(lap_times) # average recent lap time
 
     variance = sum((lap_time - avg_lap) ** 2 for lap_time in lap_times) / len(lap_times)
 
-    standard_deviation = variance ** 0.5
+    standard_deviation = variance ** 0.5 # how unstable the whole group of laps is
 
     thresholds = get_consistency_thresholds(latest_session_data)
 
-    if lap_range <= thresholds["consistent"]:
-        status = "consistent"
-    elif lap_range <= thresholds["variable"]:
-        status = "variable"
+    if lap_range <= thresholds["consistent"]: 
+        status = "consistent"              # Small lap spread  → consistent
+    elif lap_range <= thresholds["variable"]: 
+        status = "variable"                # Medium lap spread → variable
     else:
-        status = "inconsistent"
+        status = "inconsistent"            # Large lap spread  → inconsistent
 
-    result["metrics"] = {
+    result["metrics"] = { # from dictionary "results", component ["metrics"] -> calculated numbers
         "status": status,
         "lap_count": len(recent_valid_laps),
         "lap_range_ms": lap_range,
