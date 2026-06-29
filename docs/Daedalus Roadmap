@@ -182,10 +182,10 @@ v0.9.6 — Driver Coaching Module               🔴 Unimplemented / unvalidated
 ├── D. Tyre/ERS/Fuel Driving Style Coaching   🔴 Unimplemented / unvalidated
 │   └── Coach behaviour based on wear, battery, and fuel patterns
 │
-├── E. Sector 3 Awareness                     🔴 Unimplemented / unvalidated <->
+├── E. Sector 3 Awareness                     🔴 Unimplemented / unvalidated <- NEXT
 │   └── Convert performance findings into driver advice
 │
-├── F. Micro-Sector Timing Engine             🔴 Unimplemented / unvalidated <->
+├── F. Micro-Sector Timing Engine             🔴 Unimplemented / unvalidated <- NEXT
 │   └── Give advice based on where time is lost
 │
 ├── G. Track Corner Mapping                   🔴 Unimplemented / unvalidated
