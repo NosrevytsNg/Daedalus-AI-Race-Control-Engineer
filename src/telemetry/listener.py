@@ -4,7 +4,7 @@
 # 1. Receives UDP Packet from F1 game
 # 2. Asks [parser.py] to identify (packetID) and decode the UDP Packets
 # 3. Stores the latest decoded data
-# 4. Sends the latest daat to [display.py]
+# 4. Sends the latest data to [display.py]
 # 5. Sends completed lap captures to [telemetry_logger.py]
 
 
@@ -40,11 +40,11 @@ def start_listener():
     print(f"Listening on UDP port {UDP_PORT}...")
     print("Waiting for F1 telemetry packets...\n")
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # "socket.AF_INET" = IPv4 Networking | "socket.sock_DGRAM" = UDP (DataGRAM)
-    sock.bind((UDP_IP, UDP_PORT))                           # Instruct window to send all data from Port 20777 to this Python Progame
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # AF_INET = IPv4 | SOCK_DGRAM = UDP socket
+    sock.bind((UDP_IP, UDP_PORT))                           # Instructs Windows to route UDP traffic from port 20777 to this Python program
     sock.settimeout(1.0)                                    # Timeout Settings (1s)
 
-    # The timeout setting is used in conjuction with the exception condition for "data, address = sock.recvfrom(BUFFER_SIZE)" LINE 85
+    # The timeout setting is used in conjunction with the exception condition for "data, address = sock.recvfrom(BUFFER_SIZE)" LINE 85
     # The purpose of "sock.settimeout(1.0)" & "except socket.timeout: continue" is to stop UDP Receiver from getting stuck in an infinite loop
     # Without timeout: "The guard waits at the door forever until a UDP Packet knocks"
     # With timeout: "The guard waits at the door for a UDP Packet knocks for 1s, does something else then checks on the door again"
@@ -100,8 +100,8 @@ def start_listener():
                 # Car 5 Block: value[0], value[1], value[2], value[3], value[4], value[5], value[6], ...
                 # Car 6 Block: value[0], value[1], value[2], value[3], value[4], value[5], value[6], ...
 
-                # Assuming "player_car_index": values[10] = 4
-                # Parser skips to Index[4], which is Car 5
+                # Assuming player_car_index == 4, the parser skips all before and reads the 5th car block.
+                # The index is zero-based: 0 = first car, 1 = second car, etc.
 
                 header = parse_header(data)
 
@@ -131,6 +131,9 @@ def start_listener():
                 elif packet_id == PACKET_ID_LAP_DATA:
                     new_lap_data = parse_lap_data(data, header["player_car_index"])
 
+                    latest_completed_lap_sectors = None
+                    new_completed_lap_detected = False
+
                     # Added for previous sector timing records
                     if new_lap_data is not None:
 
@@ -138,30 +141,35 @@ def start_listener():
                         # then the previous lap has just ended.
                         # Please Proceed
 
-                        if(
-                            previous_lap_num is not None
-                            and new_lap_data.current_lap_num > previous_lap_num
-                            and latest_lap_data is not None
-                        ):
+                        if (previous_lap_num is not None and new_lap_data.current_lap_num > previous_lap_num and latest_lap_data is not None):
+
+                            completed_lap_time_for_log = latest_lap_data
+
                             # Sector 3 timing is removed when a new lap takes place.
                             # Sector 3 = Full Lap - S1 - S2
                             sector_1 = latest_lap_data.sector_1_time_ms
                             sector_2 = latest_lap_data.sector_2_time_ms
-                            sector_3 = latest_lap_data.current_lap_time_ms - sector_1 - sector_2
+                            completed_lap_time = latest_lap_data.current_lap_time_ms
 
-                            if sector_1 > 0 and sector_2 > 0 and sector_3 > 0:
-                                latest_completed_lap_sectors = CompletedLapSectorTiming(
-                                    lap_num=latest_lap_data.current_lap_num - 1,
-                                    sector_1_time_ms=sector_1,
-                                    sector_2_time_ms=sector_2,
-                                    sector_3_time_ms=sector_3,
-                                )
+                            if (sector_1 is not None and sector_2 is not None and completed_lap_time is not None):
+                                
+                                sector_3 = completed_lap_time - sector_1 - sector_2
+
+                                if sector_1 > 0 and sector_2 > 0 and sector_3 > 0:
+                                    latest_completed_lap_sectors = CompletedLapSectorTiming(
+                                        lap_num=latest_lap_data.current_lap_num - 1,
+                                        sector_1_time_ms=sector_1,
+                                        sector_2_time_ms=sector_2,
+                                        sector_3_time_ms=sector_3,
+                                    )
+
+                                    new_completed_lap_detected = True
 
                         previous_lap_num = new_lap_data.current_lap_num
                         latest_lap_data = new_lap_data
 
                         # Sends current session UID and latest available state to logger   
-                        if latest_completed_lap_sectors is not None:        
+                        if new_completed_lap_detected:        
                             telemetry_logger.log_lap_capture(
                                 current_session_uid,
                                 latest_lap_data,
