@@ -1,6 +1,12 @@
 import struct
 from dataclasses import dataclass
 
+# ==================================================================================
+# Convert raw UDP byte packets from F1 25 into readable Python dataclasses.
+# Decode only the packet types currently needed by Daedalus.
+# Select the player's car data using player_car_index when packets contain all cars.
+# ==================================================================================
+
 # struct PacketHeader
 # {
 #   uint16 m_packetFormat;                       2025  
