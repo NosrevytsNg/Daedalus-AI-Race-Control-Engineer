@@ -76,7 +76,7 @@ def start_listener():
 
 # ============================================================================================
     last_display_update = 0
-    DISPLAY_REFRESH_RATE = 0.25  # seconds
+    DISPLAY_REFRESH_RATE = 0.25  # Refreshes roughly 4 times per second
 
     telemetry_logger = TelemetryLogger()
     current_session_uid = None
@@ -221,6 +221,8 @@ def start_listener():
 
                 current_time = time.time()
 
+                # UDP packets arrive many times per second, so if we refresh each time we received a packet, the terminal will refresh too quickly
+                # [current_time - last_display_update] = duration since the dashboard was last refreshed
                 if current_time - last_display_update >= DISPLAY_REFRESH_RATE:
                     display_live_telemetry(
                         latest_telemetry, 
@@ -237,14 +239,20 @@ def start_listener():
                 # Replaced: display_live_telemetry(latest_telemetry, latest_lap_data, latest_session_history)              
 
 
-            except socket.timeout:
+            except socket.timeout: # No UDP packet arrived within the socket timeout window.
                 continue
+                
+                # continue sends the loop back to the top so Daedalus can wait again,
+                # instead of crashing or freezing permanently.
 
+    # Allows the user to stop Daedalus safely with Ctrl+C
     except KeyboardInterrupt:
         print("\nDaedalus Telemetry Core has stopped...")
         print("Shutting down...")
     finally:
         sock.close()
+        # Always close the UDP socket before exiting.
+        # Releases port 20777 properly so the program can be restarted cleanly.
 
 
 # ================= Initial Dashboard Layout ===========================================
