@@ -152,46 +152,51 @@ v0.9.4 — Consistency Analysis             🟡 Implemented / partially validat
 
 v0.9.5 — Radio Behavioural Intelligence (Control / Anti-Spam Refinement) 🟡 Implemented / partially validated
 │
-├── A. Radio Situation Policy 🟢 Implemented / validated
+├── A. Radio Situation Policy      🟢 Implemented / validated
 │   └── Decide: deliver, suppress, delay, interrupt, expire
 │
-├── B. Priority-Based Interrupts 🟢 Implemented / validated
+├── B. Priority-Based Interrupts   🟢 Implemented / validated
 │   └── Critical/high-priority messages can bypass normal cooldown
 │
 ├── C. Driving Context Suppression 🟢 Implemented / validated
 │   └── Hide low-value messages when more important situations are active
 │
-├── D. Stale Message Expiry 🟢 Implemented / validated
+├── D. Stale Message Expiry        🟢 Implemented / validated
 │   └── Remove old queued messages that are no longer useful
 │
-└── E. Radio Behaviour Debug 🟡 Implemented / partially validated
+└── E. Radio Behaviour Debug       🟡 Implemented / partially validated
     └── Show why a message was delivered, delayed, suppressed, or expired
 
 
-v0.9.6 — Driver Coaching Module               🔴 Unimplemented / unvalidated
+v0.9.6 — Driver Coaching Module  🔴 Unimplemented / unvalidated
 │
-├── A. Coaching Message Builder               🟡 Implemented / partially validated
+├── A. Coaching Message Builder                               🟡 Implemented / partially validated
 │   └── Convert performance findings into driver advice
 │
-├── B. Sector-Based Coaching                  🟡 Implemented / partially validated
+├── B. Sector-Based Coaching                                  🟡 Implemented / partially validated
 │   └── Give advice based on where time is lost
 │
-├── C. Consistency Coaching                   🟡 Implemented / partially validated
+├── C. Consistency Coaching                                   🟡 Implemented / partially validated
 │   └── Coach smoothness and repeatability across laps
 │
-├── D. Tyre/ERS/Fuel Driving Style Coaching   🔴 Unimplemented / unvalidated
+├── D. Tyre/ERS/Fuel Driving Style Coaching                   🔴 Unimplemented / unvalidated
 │   └── Coach behaviour based on wear, battery, and fuel patterns
 │
-├── E. Sector 3 Awareness                     🔴 Unimplemented / unvalidated <- NEXT
-│   └── Convert performance findings into driver advice
+├── E. Completed Sector Analysis + Sector Pattern Awareness   🔴 Unimplemented / unvalidated <- NEXT
+│   ├── Convert performance findings into driver advice
+│   ├── Add S3 into completed-lap sector analysis (Current - S1 - S2)
+│   ├── Preserve lap-by-lap S1/S2/S3 delta display
+│   ├── Add rolling queues for S1/S2/S3 delta
+│   ├── Use average/variance/std dev to detecty repeated sector weakness (5 lap queue)
+│   └── Only radio in meaningful messages for sector coaching
 │
-├── F. Micro-Sector Timing Engine             🔴 Unimplemented / unvalidated <- NEXT
+├── F. Micro-Sector Timing Engine                             🔴 Unimplemented / unvalidated <- NEXT
 │   └── Give advice based on where time is lost
 │
-├── G. Track Corner Mapping                   🔴 Unimplemented / unvalidated
+├── G. Track Corner Mapping                                   🔴 Unimplemented / unvalidated
 │   └── Coach smoothness and repeatability across laps
 │
-└── H. Corner-Specific Driver Coaching        🔴 Unimplemented / unvalidated
+└── H. Corner-Specific Driver Coaching                        🔴 Unimplemented / unvalidated
     └── Coach behaviour based on wear, battery, and fuel patterns
 
 
