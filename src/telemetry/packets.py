@@ -1,4 +1,12 @@
 # ✅
+# ======================================================================================================
+# packets.py - Packet ID Constants
+# - Store packet names and packet IDs used by the F1 25 UDP telemetry system.
+# - Give the rest of Daedalus readable names instead of using raw packet numbers.
+#
+# Example: Instead of checking "packet_id == 6", listener.py can check: "packet_id == PACKET_ID_CAR_TELEMETRY"
+# ======================================================================================================
+
 PACKET_NAMES = {
     0: "Motion",
     1: "Session",
