@@ -139,11 +139,13 @@ def start_listener():
 
                         # If the new and previous lap data is stored, and there is a greater number of new laps vs previous laps,
                         # then the previous lap has just ended.
-                        # Please Proceed
+                        # if "previous_lap_num = 4" and "new_lap_data.current_lap_num = 5" => Lap 4 ended, Lap 5 started.
 
                         if (previous_lap_num is not None and new_lap_data.current_lap_num > previous_lap_num and latest_lap_data is not None):
 
-                            completed_lap_time_for_log = latest_lap_data
+                            # Stores the completed lap before replacing latest_lap_data.
+                            # Important for telemetry_logger.py, to log the completed lap data, not the newly-started lap data.
+                            completed_lap_data_for_log = latest_lap_data
 
                             # Sector 3 timing is removed when a new lap takes place.
                             # Sector 3 = Full Lap - S1 - S2
@@ -151,6 +153,8 @@ def start_listener():
                             sector_2 = latest_lap_data.sector_2_time_ms
                             completed_lap_time = latest_lap_data.current_lap_time_ms
 
+
+                            # Only accepts comppleted sector timing if all sectors are positive
                             if (sector_1 is not None and sector_2 is not None and completed_lap_time is not None):
                                 
                                 sector_3 = completed_lap_time - sector_1 - sector_2
@@ -168,11 +172,13 @@ def start_listener():
                         previous_lap_num = new_lap_data.current_lap_num
                         latest_lap_data = new_lap_data
 
-                        # Sends current session UID and latest available state to logger   
+                        # Sends current session UID and latest available state to logger  
+                        # Only log when a new completed lap is detected
+                        # Prevents the same completed lap to be recorded twice 
                         if new_completed_lap_detected:        
                             telemetry_logger.log_lap_capture(
                                 current_session_uid,
-                                latest_lap_data,
+                                completed_lap_data_for_log,
                                 latest_telemetry,
                                 latest_car_status,
                                 latest_car_damage,
