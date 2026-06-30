@@ -584,6 +584,7 @@ def display_live_telemetry(latest_telemetry,
         latest_session_history,
         latest_car_damage,
         latest_session_data,
+        latest_completed_lap_sectors,
     )
 
     print()
@@ -596,6 +597,69 @@ def display_live_telemetry(latest_telemetry,
             print(f"- {message}")
     else:
         print("Not enough lap data yet")
+
+        sector_trend = performance_analysis.get("sector_trend")
+
+    print()
+    print("----------------------------------------------------")
+    print("RACE SECTOR TREND")
+    print("----------------------------------------------------")
+
+    if sector_trend is None:
+        print("No sector trend data yet")
+
+    elif not sector_trend.get("enabled"):
+        print(sector_trend.get("reason"))
+
+    elif not sector_trend.get("ready"):
+        print(sector_trend.get("reason"))
+        print(f"Clean sector history: {sector_trend.get('history_count')}/5")
+
+    else:
+        reference = sector_trend.get("reference")
+        current = sector_trend.get("current")
+        deltas = sector_trend.get("deltas")
+
+        print(f"Reason: {sector_trend.get('reason')}")
+        print(f"Clean sector history: {sector_trend.get('history_count')}/5")
+
+        print()
+        print("                     S1         S2         S3")
+        print("----------------------------------------------------")
+        print(
+            f"Average Sector   "
+            f"{format_time_ms_with_placeholder(reference['AS1']):<10} "
+            f"{format_time_ms_with_placeholder(reference['AS2']):<10} "
+            f"{format_time_ms_with_placeholder(reference['AS3']):<10}"
+        )
+        print(
+            f"Current Sector   "
+            f"{format_time_ms_with_placeholder(current['sector_1_time_ms']):<10} "
+            f"{format_time_ms_with_placeholder(current['sector_2_time_ms']):<10} "
+            f"{format_time_ms_with_placeholder(current['sector_3_time_ms']):<10}"
+        )
+        print(
+            f"Delta vs AS      "
+            f"{format_delta(deltas['D1']):<10} "
+            f"{format_delta(deltas['D2']):<10} "
+            f"{format_delta(deltas['D3']):<10}"
+        )
+        print(
+            f"STD              "
+            f"{format_sector_time(reference['STD1']):<10} "
+            f"{format_sector_time(reference['STD2']):<10} "
+            f"{format_sector_time(reference['STD3']):<10}"
+        )
+        print(
+            f"Range            "
+            f"{format_sector_time(reference['range1']):<10} "
+            f"{format_sector_time(reference['range2']):<10} "
+            f"{format_sector_time(reference['range3']):<10}"
+        )
+
+        print()
+        for message in sector_trend.get("messages", []):
+            print(f"- {message}")
 
 #========================================================================================
 

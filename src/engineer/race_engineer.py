@@ -16,6 +16,19 @@ SESSION_MODE_TIME_TRIAL = "time_trial"
 
 CURRENT_SESSION_MODE = SESSION_MODE_UNKNOWN
 
+recent_clean_sector_laps = deque(maxlen=5)
+last_sector_trend_lap_logged = None
+last_sector_trend_result = None
+
+SECTOR_TREND_MIN_HISTORY = 5
+
+SECTOR_TREND_LAP_LOSS_THRESHOLD_MS = 700
+SECTOR_TREND_SECTOR_LOSS_THRESHOLD_MS = 300
+SECTOR_TREND_SECTOR_SHARE_THRESHOLD_MS = 0.45
+
+SECTOR_TREND_STD_WARNING_MS = 350
+SECTOR_TREND_RANGE_WARNING_MS = 900
+
 
 def get_session_mode(latest_session_data):
     if latest_session_data is None:
@@ -159,6 +172,8 @@ NON_ESSENTIAL_RADIO_GROUPS = {
     "coach_sector_s2",
     "coach_consistency_variable",
     "coach_consistency_inconsistent",
+    "coach_race_sector_trend_loss",
+    "coach_race_sector_inconsistent",
 }
 
 RADIO_MESSAGE_LIFETIME_SECONDS = {
@@ -177,6 +192,8 @@ RADIO_MESSAGE_LIFETIME_SECONDS = {
     "coach_sector_s2": 20.0,
     "coach_consistency_variable": 25.0,
     "coach_consistency_inconsistent": 25.0,
+    "coach_race_sector_trend_loss": 30.0,
+    "coach_race_sector_inconsistent": 30.0,
 }
 
 def get_radio_message_lifetime_seconds(delivery_group, priority):
@@ -307,6 +324,8 @@ DELIVERY_CONTEXT_GROUPS = {
     "coach_sector_s2": "coach_sector_s2",
     "coach_consistency_variable": "coach_consistency_variable",
     "coach_consistency_inconsistent": "coach_consistency_inconsistent",
+    "coach_race_sector_trend_loss": "coach_race_sector_trend_loss",
+    "coach_race_sector_inconsistent": "coach_race_sector_inconsistent",
 }
 
 
@@ -530,6 +549,18 @@ RADIO_PHRASES = {
         "Pace is inconsistent. Slow it down slightly and rebuild control.",
         "Consistency is the target now. Keep the car tidy and repeat the lap.",
         "Focus on repeatability. Do not chase the lap time too hard.",
+    ],
+
+    "coach_race_sector_trend_loss": [
+        "Recent race pace shows one sector is costing most of the lap time.",
+        "One sector is repeatedly costing time compared to recent race pace.",
+        "Sector trend shows a repeated time loss. Focus on cleaning that sector up.",
+    ],
+
+    "coach_race_sector_inconsistent": [
+        "One sector is varying more than the others. Focus on repeatability.",
+        "Sector consistency is the issue. Use the same references each lap.",
+        "The sector trend is unstable. Prioritise repeatable braking points and exits.",
     ],
 }
 
@@ -2035,9 +2066,11 @@ def analyze_driver_performance(
         latest_session_history,
         latest_car_damage=None,
         latest_session_data=None,
+        latest_completed_lap_sectors=None,
 ):
     analysis = {"lap_comparison": None, 
                 "sector_comparison": None, 
+                "sector_trend": None,
                 "consistency": None,
                 "message": []}
         
@@ -2139,6 +2172,15 @@ def analyze_driver_performance(
                 f"Strongest sector is {worst_sec}: "
                 f"+{worst_sec_delta / 1000:.3f}s faster."
             ) 
+
+
+    sector_trend = analyze_race_sector_trend(
+        latest_completed_lap_sectors,
+        latest_car_damage,
+        latest_session_data,
+    )
+
+    analysis["sector_trend"] = sector_trend
 
     consistency_message = analyze_consistency(
         latest_lap_data,
@@ -2301,6 +2343,61 @@ def generate_driver_coaching(
                     )
                 )
 
+        sector_trend = performance_analysis.get("sector_trend")
+
+    if sector_trend is not None and sector_trend.get("ready"):
+        current = sector_trend.get("current")
+        deltas = sector_trend.get("deltas")
+
+        if current is not None and deltas is not None:
+            completed_lap_num = current.get("lap_num")
+
+            if sector_trend.get("meaningful_loss"):
+                weakest_sector = sector_trend.get("weakest_sector")
+
+                if weakest_sector == "S1":
+                    sector_delta = deltas["D1"]
+                    sector_focus = "Sector 1"
+                elif weakest_sector == "S2":
+                    sector_delta = deltas["D2"]
+                    sector_focus = "Sector 2"
+                else:
+                    sector_delta = deltas["D3"]
+                    sector_focus = "Sector 3"
+
+                if should_emit_lap_coaching_message(
+                    "coach_race_sector_trend_loss",
+                    completed_lap_num,
+                    min_laps_between=3,
+                ):
+                    coaching_messages.append(
+                        make_coaching_message(
+                            "LOW",
+                            "coach_race_sector_trend_loss",
+                            f"{sector_focus} is costing most of the time compared to recent race pace "
+                            f"({format_signed_seconds(sector_delta)})."
+                        )
+                    )
+
+            if sector_trend.get("meaningful_inconsistency"):
+                least_consistent_sector = sector_trend.get(
+                    "least_consistent_sector"
+                )
+
+                if should_emit_lap_coaching_message(
+                    "coach_race_sector_inconsistent",
+                    completed_lap_num,
+                    min_laps_between=4,
+                ):
+                    coaching_messages.append(
+                        make_coaching_message(
+                            "LOW",
+                            "coach_race_sector_inconsistent",
+                            f"{least_consistent_sector} is the least consistent sector over recent clean laps. "
+                            "Focus on repeatability."
+                        )
+                    )
+
     return sort_engineer_messages(coaching_messages)[:2]
 
 def should_emit_coaching_message(
@@ -2337,6 +2434,352 @@ def get_completed_lap_num(latest_lap_data):
         return None
 
     return latest_lap_data.current_lap_num - 1
+
+def format_signed_seconds(milliseconds):
+    if milliseconds is None:
+        return "--"
+
+    seconds = milliseconds / 1000
+
+    if seconds > 0:
+        return f"+{seconds:.3f}s"
+
+    return f"{seconds:.3f}s"
+
+
+def calculate_average(values):
+    if not values:
+        return None
+
+    return sum(values) / len(values)
+
+
+def calculate_range(values):
+    if not values:
+        return None
+
+    return max(values) - min(values)
+
+
+def calculate_standard_deviation(values):
+    if not values:
+        return None
+
+    average = calculate_average(values)
+
+    variance = sum(
+        (value - average) ** 2
+        for value in values
+    ) / len(values)
+
+    return variance ** 0.5
+
+
+def get_completed_sector_lap_entry(latest_completed_lap_sectors):
+    if latest_completed_lap_sectors is None:
+        return None
+
+    sector_1 = latest_completed_lap_sectors.sector_1_time_ms
+    sector_2 = latest_completed_lap_sectors.sector_2_time_ms
+    sector_3 = latest_completed_lap_sectors.sector_3_time_ms
+
+    if sector_1 is None or sector_2 is None or sector_3 is None:
+        return None
+
+    if sector_1 <= 0 or sector_2 <= 0 or sector_3 <= 0:
+        return None
+
+    lap_time = sector_1 + sector_2 + sector_3
+
+    return {
+        "lap_num": latest_completed_lap_sectors.lap_num,
+        "lap_time_ms": lap_time,
+        "sector_1_time_ms": sector_1,
+        "sector_2_time_ms": sector_2,
+        "sector_3_time_ms": sector_3,
+    }
+
+
+def calculate_sector_history_stats(sector_laps):
+    if not sector_laps:
+        return None
+
+    sector_map = {
+        "S1": "sector_1_time_ms",
+        "S2": "sector_2_time_ms",
+        "S3": "sector_3_time_ms",
+        "lap": "lap_time_ms",
+    }
+
+    stats = {}
+
+    for sector_name, key in sector_map.items():
+        values = [
+            lap[key]
+            for lap in sector_laps
+            if lap.get(key) is not None and lap.get(key) > 0
+        ]
+
+        if not values:
+            continue
+
+        stats[sector_name] = {
+            "average_ms": calculate_average(values),
+            "std_ms": calculate_standard_deviation(values),
+            "range_ms": calculate_range(values),
+            "values": values,
+        }
+
+    return stats
+
+def is_clean_sector_trend_lap(
+    completed_sector_entry,
+    latest_car_damage=None,
+    latest_session_data=None,
+):
+    if completed_sector_entry is None:
+        return False, "No completed sector data"
+
+    if is_safety_car_active(latest_session_data):
+        return False, "Safety Car or VSC active"
+
+    if is_major_damage_for_performance(latest_car_damage):
+        return False, "Car damage affecting lap time"
+
+    if len(recent_clean_sector_laps) >= 3:
+        stats = calculate_sector_history_stats(recent_clean_sector_laps)
+
+        if stats is not None and "lap" in stats:
+            average_lap = stats["lap"]["average_ms"]
+            std_lap = stats["lap"]["std_ms"]
+
+            lap_outlier_limit = max(
+                3500,
+                std_lap * 3
+            )
+
+            if completed_sector_entry["lap_time_ms"] > average_lap + lap_outlier_limit:
+                return False, "Possible incident or outlier lap"
+
+        sector_keys = {
+            "S1": "sector_1_time_ms",
+            "S2": "sector_2_time_ms",
+            "S3": "sector_3_time_ms",
+        }
+
+        for sector_name, key in sector_keys.items():
+            if stats is None or sector_name not in stats:
+                continue
+
+            average_sector = stats[sector_name]["average_ms"]
+            std_sector = stats[sector_name]["std_ms"]
+
+            sector_outlier_limit = max(
+                1500,
+                std_sector * 3
+            )
+
+            if completed_sector_entry[key] > average_sector + sector_outlier_limit:
+                return False, f"Possible incident or outlier in {sector_name}"
+
+    return True, "Clean lap"
+
+def analyze_race_sector_trend(
+    latest_completed_lap_sectors,
+    latest_car_damage=None,
+    latest_session_data=None,
+):
+    global last_sector_trend_lap_logged
+    global last_sector_trend_result
+
+    result = {
+        "enabled": True,
+        "ready": False,
+        "recorded": False,
+        "reason": None,
+        "history_count": len(recent_clean_sector_laps),
+        "reference": None,
+        "current": None,
+        "deltas": None,
+        "weakest_sector": None,
+        "least_consistent_sector": None,
+        "meaningful_loss": False,
+        "meaningful_inconsistency": False,
+        "messages": [],
+    }
+
+    if not is_race_mode(latest_session_data):
+        result["enabled"] = False
+        result["reason"] = "Race sector trend disabled outside race mode"
+        return result
+
+    completed_sector_entry = get_completed_sector_lap_entry(
+        latest_completed_lap_sectors
+    )
+
+    if completed_sector_entry is None:
+        result["reason"] = "No completed sector data yet"
+        return result
+
+    completed_lap_num = completed_sector_entry["lap_num"]
+
+    if last_sector_trend_lap_logged == completed_lap_num:
+        if last_sector_trend_result is not None:
+            return last_sector_trend_result
+
+        result["reason"] = "Lap already processed"
+        return result
+
+    is_clean_lap, clean_reason = is_clean_sector_trend_lap(
+        completed_sector_entry,
+        latest_car_damage,
+        latest_session_data,
+    )
+
+    if not is_clean_lap:
+        last_sector_trend_lap_logged = completed_lap_num
+        result["reason"] = clean_reason
+        last_sector_trend_result = result
+        return result
+
+    if len(recent_clean_sector_laps) < SECTOR_TREND_MIN_HISTORY:
+        recent_clean_sector_laps.append(completed_sector_entry)
+
+        last_sector_trend_lap_logged = completed_lap_num
+
+        result["recorded"] = True
+        result["history_count"] = len(recent_clean_sector_laps)
+
+        if len(recent_clean_sector_laps) < SECTOR_TREND_MIN_HISTORY:
+            result["reason"] = (
+                f"Collecting clean sector history "
+                f"({len(recent_clean_sector_laps)}/{SECTOR_TREND_MIN_HISTORY})"
+            )
+        else:
+            result["reason"] = "Clean sector baseline ready from next lap"
+
+        last_sector_trend_result = result
+        return result
+
+    reference_stats = calculate_sector_history_stats(
+        recent_clean_sector_laps
+    )
+
+    if reference_stats is None:
+        result["reason"] = "Unable to calculate sector trend reference"
+        return result
+
+    reference = {
+        "AS1": reference_stats["S1"]["average_ms"],
+        "AS2": reference_stats["S2"]["average_ms"],
+        "AS3": reference_stats["S3"]["average_ms"],
+        "average_lap": reference_stats["lap"]["average_ms"],
+
+        "STD1": reference_stats["S1"]["std_ms"],
+        "STD2": reference_stats["S2"]["std_ms"],
+        "STD3": reference_stats["S3"]["std_ms"],
+        "std_lap": reference_stats["lap"]["std_ms"],
+
+        "range1": reference_stats["S1"]["range_ms"],
+        "range2": reference_stats["S2"]["range_ms"],
+        "range3": reference_stats["S3"]["range_ms"],
+        "range_lap": reference_stats["lap"]["range_ms"],
+    }
+
+    deltas = {
+        "D1": completed_sector_entry["sector_1_time_ms"] - reference["AS1"],
+        "D2": completed_sector_entry["sector_2_time_ms"] - reference["AS2"],
+        "D3": completed_sector_entry["sector_3_time_ms"] - reference["AS3"],
+        "lap_delta": completed_sector_entry["lap_time_ms"] - reference["average_lap"],
+    }
+
+    sector_deltas = {
+        "S1": deltas["D1"],
+        "S2": deltas["D2"],
+        "S3": deltas["D3"],
+    }
+
+    sector_stds = {
+        "S1": reference["STD1"],
+        "S2": reference["STD2"],
+        "S3": reference["STD3"],
+    }
+
+    sector_ranges = {
+        "S1": reference["range1"],
+        "S2": reference["range2"],
+        "S3": reference["range3"],
+    }
+
+    weakest_sector = max(
+        sector_deltas,
+        key=sector_deltas.get,
+    )
+
+    least_consistent_sector = max(
+        sector_stds,
+        key=sector_stds.get,
+    )
+
+    weakest_sector_delta = sector_deltas[weakest_sector]
+    least_consistent_std = sector_stds[least_consistent_sector]
+    least_consistent_range = sector_ranges[least_consistent_sector]
+
+    meaningful_loss = (
+        deltas["lap_delta"] >= SECTOR_TREND_LAP_LOSS_THRESHOLD_MS
+        and weakest_sector_delta >= SECTOR_TREND_SECTOR_LOSS_THRESHOLD_MS
+        and weakest_sector_delta >= (
+            deltas["lap_delta"] * SECTOR_TREND_SECTOR_SHARE_THRESHOLD
+        )
+    )
+
+    meaningful_inconsistency = (
+        least_consistent_std >= SECTOR_TREND_STD_WARNING_MS
+        and least_consistent_range >= SECTOR_TREND_RANGE_WARNING_MS
+    )
+
+    result["ready"] = True
+    result["recorded"] = True
+    result["reason"] = "Race sector trend analysed"
+    result["history_count"] = len(recent_clean_sector_laps)
+    result["reference"] = reference
+    result["current"] = completed_sector_entry
+    result["deltas"] = deltas
+    result["weakest_sector"] = weakest_sector
+    result["least_consistent_sector"] = least_consistent_sector
+    result["meaningful_loss"] = meaningful_loss
+    result["meaningful_inconsistency"] = meaningful_inconsistency
+
+    result["messages"].append(
+        "Race sector trend: "
+        f"lap {completed_lap_num} was "
+        f"{format_signed_seconds(deltas['lap_delta'])} "
+        "versus recent clean race pace."
+    )
+
+    if meaningful_loss:
+        result["messages"].append(
+            f"{weakest_sector} caused most of the lap loss "
+            f"({format_signed_seconds(weakest_sector_delta)})."
+        )
+
+    if meaningful_inconsistency:
+        result["messages"].append(
+            f"{least_consistent_sector} is the least consistent sector "
+            f"(STD {least_consistent_std / 1000:.3f}s, "
+            f"range {least_consistent_range / 1000:.3f}s)."
+        )
+
+    if not meaningful_loss and not meaningful_inconsistency:
+        result["messages"].append(
+            "Race sector trend is stable."
+        )
+
+    recent_clean_sector_laps.append(completed_sector_entry)
+    last_sector_trend_lap_logged = completed_lap_num
+    last_sector_trend_result = result
+
+    return result
 
 def is_safety_car_active(latest_session_data):
     if latest_session_data is None:
