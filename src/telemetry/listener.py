@@ -85,7 +85,7 @@ def start_listener():
     try:
         while True:
             try:
-                data, address = sock.recvfrom(BUFFER_SIZE)
+                data_packet_bytes, address = sock.recvfrom(BUFFER_SIZE)
                 timestamp = datetime.now().strftime("%H:%M:%S")
 
                 # Packet Structure (Purpose and Concept of "player_car_index": values[10])
@@ -103,7 +103,7 @@ def start_listener():
                 # Assuming player_car_index == 4, the parser skips all before and reads the 5th car block.
                 # The index is zero-based: 0 = first car, 1 = second car, etc.
 
-                header = parse_header(data)
+                header = parse_header(data_packet_bytes)
 
                 if header is None:
                     print(f"[{timestamp}] Invalid packet received from {address[0]}:{address[1]}")
@@ -126,10 +126,10 @@ def start_listener():
                 # ============================================================
                 
                 if packet_id == PACKET_ID_CAR_TELEMETRY:
-                    latest_telemetry = parse_car_telemetry(data, header["player_car_index"])
+                    latest_telemetry = parse_car_telemetry(data_packet_bytes, header["player_car_index"])
 
                 elif packet_id == PACKET_ID_LAP_DATA:
-                    new_lap_data = parse_lap_data(data, header["player_car_index"])
+                    new_lap_data = parse_lap_data(data_packet_bytes, header["player_car_index"])
 
                     latest_completed_lap_sectors = None
                     new_completed_lap_detected = False
@@ -188,7 +188,7 @@ def start_listener():
                     #print(f"Completed Lap {latest_completed_lap_sectors.lap_num} Sector Times: S1={format_time_ms(sector_1)}, S2={format_time_ms(sector_2)}, S3={format_time_ms(sector_3)}")
     
                 elif packet_id == PACKET_ID_SESSION_HISTORY:
-                    session_history = parse_session_history(data, header["player_car_index"])
+                    session_history = parse_session_history(data_packet_bytes, header["player_car_index"])
 
                     if session_history is not None:
                         latest_session_history = session_history
@@ -196,22 +196,22 @@ def start_listener():
 
                 elif packet_id == PACKET_ID_CAR_STATUS:
                     latest_car_status = parse_car_status(
-                        data,
+                        data_packet_bytes,
                         header["player_car_index"]
                     )
 
                 elif packet_id == PACKET_ID_SESSION:
-                    latest_session_data = parse_session_data(data)
+                    latest_session_data = parse_session_data(data_packet_bytes)
 
                 elif packet_id == PACKET_ID_CAR_DAMAGE:
                     latest_car_damage = parse_car_damage(
-                        data,
+                        data_packet_bytes,
                         header["player_car_index"]
                     )
 
                 elif packet_id == PACKET_ID_TYRE_SETS:
                     tyre_sets = parse_tyre_sets(
-                        data,
+                        data_packet_bytes,
                         header["player_car_index"]
                     )
 

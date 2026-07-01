@@ -7,6 +7,19 @@ from dataclasses import dataclass
 # Select the player's car data using player_car_index when packets contain all cars.
 # ==================================================================================
 
+# Python struct terms:
+
+# < means Little Endian
+# H means unsigned short (2 bytes = uint16)
+# h means signed short (2 bytes = int16)
+# B means unsigned char (1 bytes = uint8)
+# b means signed char (1 bytes = int8)
+# Q means unsigned long long (8 bytes = uint64)
+# f means floating-point num (4 bytes = float)
+# I means unsigned int (4 bytes = uint 32)
+# "<HBBBBBQfIIBB" = H B B B B B Q f I I B B
+# 1 uint16 -> 5 uint8 -> 1 uint64 -> 1 float -> 2 unint32 -> 2 uint8
+
 # struct PacketHeader
 # {
 #   uint16 m_packetFormat;                       2025  
@@ -23,27 +36,20 @@ from dataclasses import dataclass
 #   uint8  m_secondaryPlayerCarIndex;            Index of Secondary Player's Car in array (Splitscreen)
 # }
 
-# Python struct terms:
-
-# < means Little Endian
-# H means unsigned short (2 bytes = uint16)
-# B means unsigned char (1 bytes = uint8)
-# Q means unsigned long long (8 bytes = uint64)
-# f means unsigned floating-point num (4 bytes = float)
-# I means unsigned int (4 bytes = uint 32)
-# "<HBBBBBQfIIBB" = H B B B B B Q f I I B B
-# 1 uint16 -> 5 uint8 -> 1 uint64 -> 1 float -> 2 unint32 -> 2 uint8
-
-
 HEADER_FORMAT = "<HBBBBBQfIIBB"
 HEADER_SIZE = struct.calcsize(HEADER_FORMAT)
 
 
-def parse_header(data):
-    if len(data) < HEADER_SIZE:
+def parse_header(data_packet_bytes):
+
+    # If the packet received is smaller than the header size, return None
+    # Keeps the parser from crashing when receiving incomplete packets during struct.unpack_from().
+    if len(data_packet_bytes) < HEADER_SIZE:
         return None
 
-    values = struct.unpack_from(HEADER_FORMAT, data, 0)
+    values = struct.unpack_from(HEADER_FORMAT, data_packet_bytes, 0)
+    # Obtain the header values from the packet using struct.unpack_from() with the defined HEADER_FORMAT.
+    # Decode data_packet_bytes into a dictionary starting at offset 0, the beginning of the packet.     
 
     return {
         "packet_format": values[0],
