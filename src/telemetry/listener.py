@@ -63,7 +63,7 @@ def start_listener():
     latest_session_history = None 
     previous_lap_num = 0
     latest_completed_lap_sectors = None  # store sector times for most recently completed lap 
-    invalid_lap_detected = None  # Flag to indicate if an invalid lap was detected
+    invalid_lap_num = None  # Used to indicate the invalid lap affected by replay/rewind, so it can be ignored for sector trend analysis
 
     # Car/Vehicle + Equipment Data (Packet ID 7) - Fuel, ERS, Tyre (Type & Health), DRS
     latest_car_status = None
@@ -156,11 +156,11 @@ def start_listener():
                             )
 
                             if lap_number_went_back or same_lap_time_went_back:
-                                invalid_lap_detected = new_lap_data.current_lap_num
+                                invalid_lap_num = new_lap_data.current_lap_num
 
                                 print(
                                     f"Replay/rewind detected on lap "
-                                    f"{invalid_lap_detected}. This lap will not be used for sector trend."
+                                    f"{invalid_lap_num}. This lap will not be used for sector trend."
                                 )
 
                         # clause to detect when a new lap has started, and the previous lap has ended.
@@ -199,9 +199,8 @@ def start_listener():
 
                             completed_source_lap_num = latest_lap_data.current_lap_num
 
-                            if completed_source_lap_num == invalid_lap_detected:
-                                latest_completed_lap_sectors = None
-                                invalid_lap_detected = None
+                            if completed_source_lap_num == invalid_lap_num:
+                                invalid_lap_num = None
                                 new_completed_lap_detected = False
 
                                 print(f"Lap {completed_source_lap_num} invalidated because replay/rewind was used. ")
