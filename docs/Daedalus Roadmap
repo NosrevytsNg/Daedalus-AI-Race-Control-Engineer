@@ -168,7 +168,7 @@ v0.9.5 — Radio Behavioural Intelligence (Control / Anti-Spam Refinement) 🟡 
     └── Show why a message was delivered, delayed, suppressed, or expired
 
 
-v0.9.6 — Driver Coaching Module  🔴 Unimplemented / unvalidated
+v0.9.6 — Driver Coaching Module  🟡 Active / partially implemented / partially validated
 │
 ├── A. Coaching Message Builder                               🟡 Implemented / partially validated
 │   └── Convert performance findings into driver advice
