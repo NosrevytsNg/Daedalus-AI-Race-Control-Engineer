@@ -63,6 +63,7 @@ def start_listener():
     latest_session_history = None 
     previous_lap_num = 0
     latest_completed_lap_sectors = None  # store sector times for most recently completed lap 
+    invalid_lap_detected = None  # Flag to indicate if an invalid lap was detected
 
     # Car/Vehicle + Equipment Data (Packet ID 7) - Fuel, ERS, Tyre (Type & Health), DRS
     latest_car_status = None
@@ -139,6 +140,29 @@ def start_listener():
                     # Added for previous sector timing records
                     if new_lap_data is not None:
 
+                        # Replay / Rewind Detection
+                        
+                        # Instant replay or flashback can make the game timeline move backwards.
+                        # If that happens, the current lap should not be treated as a clean sector-trend lap.
+                
+                        if latest_lap_data is not None:
+                            lap_number_went_back = (
+                                new_lap_data.current_lap_num < latest_lap_data.current_lap_num
+                            )
+
+                            same_lap_time_went_back = (
+                                new_lap_data.current_lap_num == latest_lap_data.current_lap_num
+                                and new_lap_data.current_lap_time_ms + 2000 < latest_lap_data.current_lap_time_ms # 2000 = 2 seconds buffer to avoid false positives
+                            )
+
+                            if lap_number_went_back or same_lap_time_went_back:
+                                invalid_sector_trend_lap_num = new_lap_data.current_lap_num
+
+                                print(
+                                    f"Replay/rewind detected on lap "
+                                    f"{invalid_sector_trend_lap_num}. This lap will not be used for sector trend."
+                                )
+
                         # clause to detect when a new lap has started, and the previous lap has ended.
                         rewind_detected = False
 
@@ -173,31 +197,44 @@ def start_listener():
 
                         if (previous_lap_num is not None and new_lap_data.current_lap_num > previous_lap_num and latest_lap_data is not None):
 
-                            # Stores the completed lap before replacing latest_lap_data.
-                            # Important for telemetry_logger.py, to log the completed lap data, not the newly-started lap data.
-                            completed_lap_data_for_log = latest_lap_data
+                            completed_source_lap_num = latest_lap_data.current_lap_num
 
-                            # Sector 3 timing is removed when a new lap takes place.
-                            # Sector 3 = Full Lap - S1 - S2
-                            sector_1 = latest_lap_data.sector_1_time_ms
-                            sector_2 = latest_lap_data.sector_2_time_ms
-                            completed_lap_time = latest_lap_data.current_lap_time_ms
+                            if completed_source_lap_num == invalid_sector_trend_lap_num:
+                                latest_completed_lap_sectors = None
+                                invalid_sector_trend_lap_num = None
+                                new_completed_lap_detected = False
+
+                                print(
+                                    f"[Daedalus] Lap {completed_source_lap_num} ignored for sector trend "
+                                    "because replay/rewind was used."
+                                )
+
+                            else:
+                                # Stores the completed lap before replacing latest_lap_data.
+                                # Important for telemetry_logger.py, to log the completed lap data, not the newly-started lap data.
+                                completed_lap_data_for_log = latest_lap_data
+
+                                # Sector 3 timing is removed when a new lap takes place.
+                                # Sector 3 = Full Lap - S1 - S2
+                                sector_1 = latest_lap_data.sector_1_time_ms
+                                sector_2 = latest_lap_data.sector_2_time_ms
+                                completed_lap_time = latest_lap_data.current_lap_time_ms
 
 
-                            # Only accepts comppleted sector timing if all sectors are positive
-                            if (sector_1 is not None and sector_2 is not None and completed_lap_time is not None):
-                                
-                                sector_3 = completed_lap_time - sector_1 - sector_2
+                                # Only accepts comppleted sector timing if all sectors are positive
+                                if (sector_1 is not None and sector_2 is not None and completed_lap_time is not None):
+                                    
+                                    sector_3 = completed_lap_time - sector_1 - sector_2
 
-                                if sector_1 > 0 and sector_2 > 0 and sector_3 > 0:
-                                    latest_completed_lap_sectors = CompletedLapSectorTiming(
-                                        lap_num=latest_lap_data.current_lap_num - 1,
-                                        sector_1_time_ms=sector_1,
-                                        sector_2_time_ms=sector_2,
-                                        sector_3_time_ms=sector_3,
-                                    )
+                                    if sector_1 > 0 and sector_2 > 0 and sector_3 > 0:
+                                        latest_completed_lap_sectors = CompletedLapSectorTiming(
+                                            lap_num=latest_lap_data.current_lap_num - 1,
+                                            sector_1_time_ms=sector_1,
+                                            sector_2_time_ms=sector_2,
+                                            sector_3_time_ms=sector_3,
+                                        )
 
-                                    new_completed_lap_detected = True
+                                        new_completed_lap_detected = True
 
                         previous_lap_num = new_lap_data.current_lap_num
                         latest_lap_data = new_lap_data
