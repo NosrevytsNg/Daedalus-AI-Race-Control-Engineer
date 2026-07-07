@@ -2240,6 +2240,11 @@ def generate_driver_coaching(
 
     if is_major_damage_for_performance(latest_car_damage):
         return coaching_messages
+    
+    completed_lap_num = get_completed_lap_num(latest_lap_data)
+
+    if completed_lap_num is None:
+        return coaching_messages
 
     lap_comparison = performance_analysis.get("lap_comparison")
 
@@ -2248,9 +2253,6 @@ def generate_driver_coaching(
 
         if lap_delta is not None:
             completed_lap_num = get_completed_lap_num(latest_lap_data)
-
-            if completed_lap_num is None:
-                return coaching_messages
 
             if lap_delta >= 3000:
                 if should_emit_coaching_message(
