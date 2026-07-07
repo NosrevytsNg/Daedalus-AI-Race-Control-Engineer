@@ -28,7 +28,7 @@ from src.telemetry.packets import (PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET
 # Save completed laps to CSV
 from src.telemetry.telemetry_logger import (TelemetryLogger)
 
-from src.engineer.race_engineer import (reset_race_sector_trend_state)
+# from src.engineer.race_engineer import (reset_race_sector_trend_state)
 
 
 # UDP_IP = "0.0.0.0" # Potential security risk (Traffic originating from ANY network)
@@ -156,38 +156,38 @@ def start_listener():
                             )
 
                             if lap_number_went_back or same_lap_time_went_back:
-                                invalid_sector_trend_lap_num = new_lap_data.current_lap_num
+                                invalid_lap_detected = new_lap_data.current_lap_num
 
                                 print(
                                     f"Replay/rewind detected on lap "
-                                    f"{invalid_sector_trend_lap_num}. This lap will not be used for sector trend."
+                                    f"{invalid_lap_detected}. This lap will not be used for sector trend."
                                 )
 
                         # clause to detect when a new lap has started, and the previous lap has ended.
-                        rewind_detected = False
+                        # rewind_detected = False
 
-                        if latest_lap_data is not None:
-                            lap_num_rewind = (
-                                new_lap_data.current_lap_num < latest_lap_data.current_lap_num
-                            ) 
+                        # if latest_lap_data is not None:
+                        #     lap_num_rewind = (
+                        #         new_lap_data.current_lap_num < latest_lap_data.current_lap_num
+                        #     ) 
 
-                            same_lap_num_rewind = (
-                                new_lap_data.current_lap_num == latest_lap_data.current_lap_num
-                                and new_lap_data.current_lap_time_ms < latest_lap_data.current_lap_time_ms
-                            )
+                        #     same_lap_num_rewind = (
+                        #         new_lap_data.current_lap_num == latest_lap_data.current_lap_num
+                        #         and new_lap_data.current_lap_time_ms < latest_lap_data.current_lap_time_ms
+                        #     )
 
-                            rewind_detected = lap_num_rewind or same_lap_num_rewind
+                        #     rewind_detected = lap_num_rewind or same_lap_num_rewind
 
-                        if rewind_detected:
-                            previous_lap_num = new_lap_data.current_lap_num
-                            latest_lap_data = new_lap_data
-                            latest_completed_lap_sectors = None
-                            reset_race_sector_trend_state()
+                        # if rewind_detected:
+                        #     previous_lap_num = new_lap_data.current_lap_num
+                        #     latest_lap_data = new_lap_data
+                        #     latest_completed_lap_sectors = None
+                        #     reset_race_sector_trend_state()
 
-                            # Optional print
-                            print("Rewind detected! - Lap tracking reset.")
+                        #     # Optional print
+                        #     print("Rewind detected! - Lap tracking reset.")
                             
-                            continue
+                        #     continue
 
 
 
@@ -199,15 +199,12 @@ def start_listener():
 
                             completed_source_lap_num = latest_lap_data.current_lap_num
 
-                            if completed_source_lap_num == invalid_sector_trend_lap_num:
+                            if completed_source_lap_num == invalid_lap_detected:
                                 latest_completed_lap_sectors = None
-                                invalid_sector_trend_lap_num = None
+                                invalid_lap_detected = None
                                 new_completed_lap_detected = False
 
-                                print(
-                                    f"[Daedalus] Lap {completed_source_lap_num} ignored for sector trend "
-                                    "because replay/rewind was used."
-                                )
+                                print(f"Lap {completed_source_lap_num} invalidated because replay/rewind was used. ")
 
                             else:
                                 # Stores the completed lap before replacing latest_lap_data.
