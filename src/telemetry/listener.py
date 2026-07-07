@@ -131,8 +131,8 @@ def start_listener():
                 elif packet_id == PACKET_ID_LAP_DATA:
                     new_lap_data = parse_lap_data(data_packet_bytes, header["player_car_index"])
 
-                    latest_completed_lap_sectors = None
                     new_completed_lap_detected = False
+                    latest_completed_lap_sectors = None
 
                     # Added for previous sector timing records
                     if new_lap_data is not None:

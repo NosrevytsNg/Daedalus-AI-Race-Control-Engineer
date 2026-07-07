@@ -24,7 +24,7 @@ SECTOR_TREND_MIN_HISTORY = 5
 
 SECTOR_TREND_LAP_LOSS_THRESHOLD_MS = 700
 SECTOR_TREND_SECTOR_LOSS_THRESHOLD_MS = 300
-SECTOR_TREND_SECTOR_SHARE_THRESHOLD_MS = 0.45
+SECTOR_TREND_SECTOR_SHARE_THRESHOLD = 0.45
 
 SECTOR_TREND_STD_WARNING_MS = 350
 SECTOR_TREND_RANGE_WARNING_MS = 900
@@ -2204,8 +2204,8 @@ def make_coaching_message(priority, context, text):
         text,
     )
 
-def should_emit_lap_coaching_message(context, completed_lap_num, min_lap_between=2):
-    if completed_lap_num is not None:
+def should_emit_lap_coaching_message(context, completed_lap_num, min_laps_between=2):
+    if completed_lap_num is None:
         return False
     
     last_lap = last_coaching_lap_by_context.get(context)
@@ -2213,7 +2213,7 @@ def should_emit_lap_coaching_message(context, completed_lap_num, min_lap_between
     if last_lap is not None:
         laps_since_last = completed_lap_num - last_lap
 
-        if laps_since_last < min_lap_between:
+        if laps_since_last < min_laps_between:
             return False
         
     last_coaching_lap_by_context[context] = completed_lap_num
@@ -2343,7 +2343,7 @@ def generate_driver_coaching(
                     )
                 )
 
-        sector_trend = performance_analysis.get("sector_trend")
+    sector_trend = performance_analysis.get("sector_trend")
 
     if sector_trend is not None and sector_trend.get("ready"):
         current = sector_trend.get("current")

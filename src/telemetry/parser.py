@@ -73,7 +73,9 @@ def parse_header(data_packet_bytes):
 
 CAR_TELEMETRY_FORMAT = "<HfffBbHBBH4H4B4BH4f4B"
 CAR_TELEMETRY_SIZE = struct.calcsize(CAR_TELEMETRY_FORMAT)
+# Packet 6 stores multiple cars' telemetry data, so we need to select the player's car.
 
+# Choose only data that is required.
 @dataclass
 class CarTelemetry:
     speed: int
@@ -88,6 +90,8 @@ def parse_car_telemetry(data, player_car_index):
     telemetry_start = HEADER_SIZE
     car_offset = telemetry_start + (player_car_index * CAR_TELEMETRY_SIZE)
 
+    # Confirm that the data packet is large enough to contain the telemetry data for the player's car.
+    # If not, return None to safelyavoid crashing the parser.
     if len(data) < car_offset + CAR_TELEMETRY_SIZE:
         return None
 

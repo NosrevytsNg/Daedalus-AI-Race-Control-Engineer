@@ -537,7 +537,7 @@ def display_live_telemetry(latest_telemetry,
     else:
         print("All systems stable")
 
-    delivery_messages = prepare_delivery_messages(engineer_messages)
+    # delivery_messages = prepare_delivery_messages(engineer_messages)
 
     # print()
     # print("----------------------------------------------------")
@@ -587,6 +587,8 @@ def display_live_telemetry(latest_telemetry,
         latest_completed_lap_sectors,
     )
 
+    sector_trend = performance_analysis.get("sector_trend")
+
     print()
     print("----------------------------------------------------")
     print("PERFORMANCE ANALYSIS")
@@ -598,7 +600,7 @@ def display_live_telemetry(latest_telemetry,
     else:
         print("Not enough lap data yet")
 
-        sector_trend = performance_analysis.get("sector_trend")
+    
 
     print()
     print("----------------------------------------------------")
