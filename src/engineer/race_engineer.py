@@ -2252,7 +2252,6 @@ def generate_driver_coaching(
         lap_delta = lap_comparison.get("lap_delta")
 
         if lap_delta is not None:
-            completed_lap_num = get_completed_lap_num(latest_lap_data)
 
             if lap_delta >= 3000:
                 if should_emit_coaching_message(
