@@ -28,6 +28,8 @@ from src.telemetry.packets import (PACKET_NAMES, PACKET_ID_CAR_TELEMETRY, PACKET
 # Save completed laps to CSV
 from src.telemetry.telemetry_logger import (TelemetryLogger)
 
+from src.engineer.race_engineer import (reset_race_sector_trend_state)
+
 
 # UDP_IP = "0.0.0.0" # Potential security risk (Traffic originating from ANY network)
 UDP_IP = "127.0.0.1" # Traffic originating from LOCAL computer
@@ -132,10 +134,38 @@ def start_listener():
                     new_lap_data = parse_lap_data(data_packet_bytes, header["player_car_index"])
 
                     new_completed_lap_detected = False
-                    latest_completed_lap_sectors = None
+                    completed_lap_data_for_log = None
 
                     # Added for previous sector timing records
                     if new_lap_data is not None:
+
+                        # clause to detect when a new lap has started, and the previous lap has ended.
+                        rewind_detected = False
+
+                        if latest_lap_data is not None:
+                            lap_num_rewind = (
+                                new_lap_data.current_lap_num < latest_lap_data.current_lap_num
+                            ) 
+
+                            same_lap_num_rewind = (
+                                new_lap_data.current_lap_num == latest_lap_data.current_lap_num
+                                and new_lap_data.current_lap_time_ms < latest_lap_data.current_lap_time_ms
+                            )
+
+                            rewind_detected = lap_num_rewind or same_lap_num_rewind
+
+                        if rewind_detected:
+                            previous_lap_num = new_lap_data.current_lap_num
+                            latest_lap_data = new_lap_data
+                            latest_completed_lap_sectors = None
+                            reset_race_sector_trend_state()
+
+                            # Optional print
+                            print("Rewind detected! - Lap tracking reset.")
+                            
+                            continue
+
+
 
                         # If the new and previous lap data is stored, and there is a greater number of new laps vs previous laps,
                         # then the previous lap has just ended.

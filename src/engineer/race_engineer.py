@@ -3070,3 +3070,11 @@ def analyze_consistency(latest_lap_data, latest_session_history, latest_car_dama
     #     )
 
     # return messages       
+
+def reset_race_sector_trend_state():
+    global last_sector_trend_lap_logged
+    global last_sector_trend_result
+
+    recent_clean_sector_laps.clear()
+    last_sector_trend_lap_logged = None
+    last_sector_trend_result = None
