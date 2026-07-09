@@ -179,7 +179,7 @@ v0.9.6 — Driver Coaching Module  🟡 Active / partially implemented / partial
 ├── C. Consistency Coaching                                   🟡 Implemented / partially validated
 │   └── Coach smoothness and repeatability across laps
 │
-├── D. Tyre/ERS/Fuel Driving Style Coaching                   🔴 Unimplemented / unvalidated
+├── D. Tyre/ERS/Fuel Driving Style Coaching                   🟡 Implemented / partially validated
 │   └── Coach behaviour based on wear, battery, and fuel patterns
 │
 ├── E. Completed Sector Analysis + Sector Pattern Awareness   🟡 Implemented / partially validated
@@ -190,7 +190,7 @@ v0.9.6 — Driver Coaching Module  🟡 Active / partially implemented / partial
 │   ├── Use average/variance/std dev to detecty repeated sector weakness (5 lap queue)
 │   └── Only radio in meaningful messages for sector coaching
 │
-├── F. DRS / Traffic Intelligence Prototype                   🔴 Unimplemented / unvalidated <- NEXT
+├── F. DRS / Traffic Intelligence Prototype                   🔴 Unimplemented / unvalidated 
 │   ├── Parse all cars from Packet 2
 │   ├── Find player car position
 │   ├── Find car ahead
