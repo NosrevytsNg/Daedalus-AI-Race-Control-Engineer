@@ -204,6 +204,7 @@ v0.9.6 — Driver Coaching Module  🟡 Active / partially implemented / partial
 │   └── No coaching
 │
 ├── G. Micro-Sector Timing Engine                             🔴 Unimplemented / unvalidated <- NEXT
+│   ├── Divides S1/S2/S3 in micro-sectors of specific factors 
 │   └── Give advice based on where time is lost
 │
 ├── H. Track Corner Mapping                                   🔴 Unimplemented / unvalidated
