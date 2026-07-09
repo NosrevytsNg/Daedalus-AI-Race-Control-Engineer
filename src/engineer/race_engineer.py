@@ -29,6 +29,29 @@ SECTOR_TREND_SECTOR_SHARE_THRESHOLD = 0.45
 SECTOR_TREND_STD_WARNING_MS = 350
 SECTOR_TREND_RANGE_WARNING_MS = 900
 
+# ======================================================================================================
+# v0.9.6D - Tyre / Fuel / ERS Driving Style Coaching
+# Purpose:
+# - These are not warning thresholds.
+# - These thresholds decide when the engineer should give driving-style advice.
+# - Existing warning logic still handles normal alerts like "Fuel critical" or "ERS low".
+
+ERS_MAX_ENERGY = 4_000_000
+
+TYRE_STYLE_MANAGE_THRESHOLD = 45
+TYRE_STYLE_PROTECT_THRESHOLD = 60
+TYRE_STYLE_CRITICAL_THRESHOLD = 75
+
+FUEL_STYLE_TIGHT_THRESHOLD = -0.05
+FUEL_STYLE_DEFICIT_THRESHOLD = -0.20
+FUEL_STYLE_CRITICAL_THRESHOLD = -0.50
+FUEL_STYLE_SURPLUS_THRESHOLD = 0.75
+
+ERS_STYLE_CRITICAL_LOW_THRESHOLD = 10
+ERS_STYLE_LOW_THRESHOLD = 25
+ERS_STYLE_HIGH_THRESHOLD = 80
+ERS_STYLE_VERY_HIGH_THRESHOLD = 90
+
 
 def get_session_mode(latest_session_data):
     if latest_session_data is None:
@@ -168,12 +191,29 @@ NON_ESSENTIAL_RADIO_GROUPS = {
     "sidepod_damage_low",
     "diffuser_damage_low",
     "coach_reset_rhythm",
+
     "coach_sector_s1",
     "coach_sector_s2",
+
     "coach_consistency_variable",
     "coach_consistency_inconsistent",
+
     "coach_race_sector_trend_loss",
     "coach_race_sector_inconsistent",
+
+    "coach_tyre_style_manage",
+    "coach_tyre_style_protect",
+    "coach_tyre_style_critical",
+
+    "coach_fuel_style_tight",
+    "coach_fuel_style_deficit",
+    "coach_fuel_style_critical",
+    "coach_fuel_style_surplus",
+
+    "coach_ers_style_critical_low",
+    "coach_ers_style_low",
+    "coach_ers_style_high",
+    "coach_ers_style_very_high",
 }
 
 RADIO_MESSAGE_LIFETIME_SECONDS = {
@@ -194,6 +234,17 @@ RADIO_MESSAGE_LIFETIME_SECONDS = {
     "coach_consistency_inconsistent": 25.0,
     "coach_race_sector_trend_loss": 30.0,
     "coach_race_sector_inconsistent": 30.0,
+    "coach_tyre_style_manage": 30.0,
+    "coach_tyre_style_protect": 30.0,
+    "coach_tyre_style_critical": 30.0,
+    "coach_fuel_style_tight": 30.0,
+    "coach_fuel_style_deficit": 30.0,
+    "coach_fuel_style_critical": 30.0,
+    "coach_fuel_style_surplus": 30.0,
+    "coach_ers_style_critical_low": 30.0,
+    "coach_ers_style_low": 30.0,
+    "coach_ers_style_high": 30.0,
+    "coach_ers_style_very_high": 30.0,
 }
 
 def get_radio_message_lifetime_seconds(delivery_group, priority):
@@ -326,6 +377,20 @@ DELIVERY_CONTEXT_GROUPS = {
     "coach_consistency_inconsistent": "coach_consistency_inconsistent",
     "coach_race_sector_trend_loss": "coach_race_sector_trend_loss",
     "coach_race_sector_inconsistent": "coach_race_sector_inconsistent",
+    
+    "coach_tyre_style_manage": "coach_tyre_style_manage",
+    "coach_tyre_style_protect": "coach_tyre_style_protect",
+    "coach_tyre_style_critical": "coach_tyre_style_critical",
+
+    "coach_fuel_style_tight": "coach_fuel_style_tight",
+    "coach_fuel_style_deficit": "coach_fuel_style_deficit",
+    "coach_fuel_style_critical": "coach_fuel_style_critical",
+    "coach_fuel_style_surplus": "coach_fuel_style_surplus",
+
+    "coach_ers_style_critical_low": "coach_ers_style_critical_low",
+    "coach_ers_style_low": "coach_ers_style_low",
+    "coach_ers_style_high": "coach_ers_style_high",
+    "coach_ers_style_very_high": "coach_ers_style_very_high",
 }
 
 
@@ -561,6 +626,72 @@ RADIO_PHRASES = {
         "One sector is varying more than the others. Focus on repeatability.",
         "Sector consistency is the issue. Use the same references each lap.",
         "The sector trend is unstable. Prioritise repeatable braking points and exits.",
+    ],
+
+    "coach_tyre_style_manage": [
+        "Tyres are starting to wear. Keep the steering smooth and avoid sliding the car.",
+        "Tyre wear is building. Smooth inputs now, especially on corner entry and traction.",
+        "Start managing the tyres. Keep it clean and avoid unnecessary sliding.",
+    ],
+
+    "coach_tyre_style_protect": [
+        "Tyre wear is getting high. Avoid unnecessary kerbs and focus on clean traction exits.",
+        "Protect the tyres now. Smooth steering, clean exits, and avoid wheelspin.",
+        "Tyres are wearing heavily. Keep the car tidy and stay away from aggressive kerbs.",
+    ],
+
+    "coach_tyre_style_critical": [
+        "Tyres are heavily worn. Protect them now — smooth inputs, no sliding, and avoid aggressive kerbs.",
+        "Tyres are near the limit. Keep it clean and avoid loading them unnecessarily.",
+        "Heavy tyre wear now. Focus on survival driving: smooth inputs and no sliding.",
+    ],
+
+    "coach_fuel_style_tight": [
+        "Fuel is slightly tight. Start saving with small lifts before the bigger braking zones.",
+        "Fuel margin is small. Add a little lift and coast where possible.",
+        "Fuel is close. Avoid unnecessary burn and keep the driving efficient.",
+    ],
+
+    "coach_fuel_style_deficit": [
+        "Fuel is below target. Lift and coast earlier, and short shift where possible.",
+        "We are short on fuel. Start saving into the heavy braking zones.",
+        "Fuel deficit showing. Lift and coast now, especially before big stops.",
+    ],
+
+    "coach_fuel_style_critical": [
+        "Fuel is critically short. We need serious saving now — lift and coast into the heavy braking zones.",
+        "Fuel target is critical. Save every lap now.",
+        "We are not on fuel target. Serious lift and coast required.",
+    ],
+
+    "coach_fuel_style_surplus": [
+        "Fuel margin is healthy. You can afford to push where it matters.",
+        "Fuel is in good shape. Push if needed.",
+        "Fuel margin looks good. You have room to attack if required.",
+    ],
+
+    "coach_ers_style_critical_low": [
+        "Battery is very low. Harvest this lap and avoid unnecessary deployment.",
+        "ERS is nearly empty. Rebuild the battery and be selective with deployment.",
+        "Battery critical. Harvest now and save deployment for the main straight.",
+    ],
+
+    "coach_ers_style_low": [
+        "ERS is low. Save deployment and rebuild the battery for the main straights.",
+        "Battery is low. Be selective with deployment.",
+        "ERS needs recovery. Harvest where possible this lap.",
+    ],
+
+    "coach_ers_style_high": [
+        "Battery is healthy. Use deployment on the main straights if you are attacking or defending.",
+        "ERS is available. Use it where it matters.",
+        "Battery looks good. Deploy on the straights if needed.",
+    ],
+
+    "coach_ers_style_very_high": [
+        "Battery is nearly full. Use some energy on the straights so we do not waste harvesting potential.",
+        "ERS is close to full. Spend some battery where it gives lap time.",
+        "Battery is very high. Use deployment intelligently on the straights.",
     ],
 }
 
@@ -2219,6 +2350,371 @@ def should_emit_lap_coaching_message(context, completed_lap_num, min_laps_betwee
     last_coaching_lap_by_context[context] = completed_lap_num
     return True
 
+def make_driving_style_candidate(
+    rank,
+    priority,
+    context,
+    text,
+    min_laps_between,
+    min_seconds_between,
+):
+    """
+    Build a driving-style coaching candidate.
+
+    A candidate is not spoken immediately.
+    generate_driver_coaching() will compare all candidates, choose the best one,
+    then apply cooldown only to the selected message.
+
+    This prevents tyre, fuel, and ERS coaching from all speaking at once.
+    """
+    return {
+        "rank": rank,
+        "message": make_coaching_message(
+            priority,
+            context,
+            text,
+        ),
+        "min_laps_between": min_laps_between,
+        "min_seconds_between": min_seconds_between,
+    }
+
+
+def get_fitted_tyre_set(latest_tyre_sets):
+    if latest_tyre_sets is None:
+        return None
+
+    return latest_tyre_sets.fitted_set
+
+
+def get_max_tyre_wear_for_style(latest_car_damage, latest_tyre_sets):
+    """
+    Prefer live per-wheel tyre wear from Packet 10.
+
+    If Packet 10 damage data is missing, fall back to the fitted tyre set wear
+    from Packet 12. The fitted set is less detailed, but still useful.
+    """
+    if latest_car_damage is not None and latest_car_damage.tyre_wear:
+        return max(latest_car_damage.tyre_wear)
+
+    fitted = get_fitted_tyre_set(latest_tyre_sets)
+
+    if fitted is not None:
+        return fitted.wear
+
+    return None
+
+
+def is_driving_style_coaching_suppressed(
+    latest_car_status,
+    latest_session_data,
+    latest_car_damage,
+):
+    """
+    Suppress driving-style coaching when the advice is not useful.
+
+    Safety Car/VSC and major damage already pause performance coaching.
+    Pit limiter means the car is in or near the pits, so driving-style advice
+    is not relevant at that moment.
+    """
+    if is_safety_car_active(latest_session_data):
+        return True
+
+    if is_major_damage_for_performance(latest_car_damage):
+        return True
+
+    if (
+        latest_car_status is not None
+        and latest_car_status.pit_limiter_status
+    ):
+        return True
+
+    return False
+
+
+def get_tyre_driving_style_coaching_candidate(
+    latest_car_damage,
+    latest_tyre_sets,
+    latest_session_data,
+):
+    session_mode = get_session_mode(latest_session_data)
+
+    if session_mode not in (
+        SESSION_MODE_RACE,
+        SESSION_MODE_PRACTICE,
+        SESSION_MODE_QUALIFYING,
+    ):
+        return None
+
+    max_wear = get_max_tyre_wear_for_style(
+        latest_car_damage,
+        latest_tyre_sets,
+    )
+
+    if max_wear is None:
+        return None
+
+    fitted = get_fitted_tyre_set(latest_tyre_sets)
+    usable_life_low = (
+        fitted is not None
+        and fitted.usable_life is not None
+        and fitted.usable_life <= 2
+    )
+
+    if max_wear >= TYRE_STYLE_CRITICAL_THRESHOLD:
+        text = (
+            f"Tyres are heavily worn ({max_wear:.0f}%). "
+            "Protect them now — smooth inputs, no sliding, and avoid aggressive kerbs."
+        )
+
+        if usable_life_low:
+            text = (
+                f"Tyres are heavily worn ({max_wear:.0f}%) and near the end of the usable window. "
+                "Protect them now — smooth inputs, no sliding, and avoid aggressive kerbs."
+            )
+
+        return make_driving_style_candidate(
+            rank=2,
+            priority="MEDIUM",
+            context="coach_tyre_style_critical",
+            text=text,
+            min_laps_between=1,
+            min_seconds_between=60,
+        )
+
+    if max_wear >= TYRE_STYLE_PROTECT_THRESHOLD:
+        return make_driving_style_candidate(
+            rank=5,
+            priority="LOW",
+            context="coach_tyre_style_protect",
+            text=(
+                f"Tyre wear is getting high ({max_wear:.0f}%). "
+                "Avoid unnecessary kerbs and focus on clean traction exits."
+            ),
+            min_laps_between=2,
+            min_seconds_between=75,
+        )
+
+    if max_wear >= TYRE_STYLE_MANAGE_THRESHOLD:
+        return make_driving_style_candidate(
+            rank=8,
+            priority="LOW",
+            context="coach_tyre_style_manage",
+            text=(
+                f"Tyres are starting to wear ({max_wear:.0f}%). "
+                "Keep the steering smooth and avoid sliding the car."
+            ),
+            min_laps_between=3,
+            min_seconds_between=90,
+        )
+
+    return None
+
+
+def get_fuel_driving_style_coaching_candidate(
+    latest_car_status,
+    latest_session_data,
+):
+    if latest_car_status is None:
+        return None
+
+    if not is_race_mode(latest_session_data):
+        return None
+
+    fuel_laps = latest_car_status.fuel_remaining_laps
+
+    if fuel_laps <= FUEL_STYLE_CRITICAL_THRESHOLD:
+        return make_driving_style_candidate(
+            rank=1,
+            priority="MEDIUM",
+            context="coach_fuel_style_critical",
+            text=(
+                f"Fuel is critically short ({fuel_laps:+.2f} laps). "
+                "We need serious saving now — lift and coast into the heavy braking zones."
+            ),
+            min_laps_between=1,
+            min_seconds_between=60,
+        )
+
+    if fuel_laps <= FUEL_STYLE_DEFICIT_THRESHOLD:
+        return make_driving_style_candidate(
+            rank=4,
+            priority="MEDIUM",
+            context="coach_fuel_style_deficit",
+            text=(
+                f"Fuel is below target ({fuel_laps:+.2f} laps). "
+                "Lift and coast earlier, and short shift where possible."
+            ),
+            min_laps_between=2,
+            min_seconds_between=75,
+        )
+
+    if fuel_laps <= FUEL_STYLE_TIGHT_THRESHOLD:
+        return make_driving_style_candidate(
+            rank=7,
+            priority="LOW",
+            context="coach_fuel_style_tight",
+            text=(
+                f"Fuel is slightly tight ({fuel_laps:+.2f} laps). "
+                "Start saving with small lifts before the bigger braking zones."
+            ),
+            min_laps_between=3,
+            min_seconds_between=90,
+        )
+
+    if fuel_laps >= FUEL_STYLE_SURPLUS_THRESHOLD:
+        return make_driving_style_candidate(
+            rank=11,
+            priority="LOW",
+            context="coach_fuel_style_surplus",
+            text=(
+                f"Fuel margin is healthy ({fuel_laps:+.2f} laps). "
+                "You can afford to push where it matters."
+            ),
+            min_laps_between=4,
+            min_seconds_between=120,
+        )
+
+    return None
+
+
+def get_ers_driving_style_coaching_candidate(
+    latest_car_status,
+    latest_session_data,
+):
+    if latest_car_status is None:
+        return None
+
+    session_mode = get_session_mode(latest_session_data)
+
+    if session_mode not in (
+        SESSION_MODE_RACE,
+        SESSION_MODE_PRACTICE,
+        SESSION_MODE_QUALIFYING,
+    ):
+        return None
+
+    ers_pct = (
+        latest_car_status.ers_energy_storage
+        / ERS_MAX_ENERGY
+    ) * 100
+
+    if ers_pct <= ERS_STYLE_CRITICAL_LOW_THRESHOLD:
+        return make_driving_style_candidate(
+            rank=3,
+            priority="MEDIUM",
+            context="coach_ers_style_critical_low",
+            text=(
+                f"Battery is very low ({ers_pct:.0f}%). "
+                "Harvest this lap and avoid unnecessary deployment."
+            ),
+            min_laps_between=1,
+            min_seconds_between=45,
+        )
+
+    if ers_pct <= ERS_STYLE_LOW_THRESHOLD:
+        return make_driving_style_candidate(
+            rank=6,
+            priority="LOW",
+            context="coach_ers_style_low",
+            text=(
+                f"ERS is low ({ers_pct:.0f}%). "
+                "Save deployment and rebuild the battery for the main straights."
+            ),
+            min_laps_between=2,
+            min_seconds_between=60,
+        )
+
+    if ers_pct >= ERS_STYLE_VERY_HIGH_THRESHOLD:
+        return make_driving_style_candidate(
+            rank=9,
+            priority="LOW",
+            context="coach_ers_style_very_high",
+            text=(
+                f"Battery is nearly full ({ers_pct:.0f}%). "
+                "Use some energy on the straights so we do not waste harvesting potential."
+            ),
+            min_laps_between=3,
+            min_seconds_between=90,
+        )
+
+    if ers_pct >= ERS_STYLE_HIGH_THRESHOLD:
+        return make_driving_style_candidate(
+            rank=10,
+            priority="LOW",
+            context="coach_ers_style_high",
+            text=(
+                f"Battery is healthy ({ers_pct:.0f}%). "
+                "Use deployment on the main straights if you are attacking or defending."
+            ),
+            min_laps_between=3,
+            min_seconds_between=90,
+        )
+
+    return None
+
+
+def select_best_driving_style_candidate(candidates):
+    valid_candidates = [
+        candidate for candidate in candidates
+        if candidate is not None
+    ]
+
+    if not valid_candidates:
+        return None
+
+    return min(
+        valid_candidates,
+        key=lambda candidate: candidate["rank"]
+    )
+
+
+def maybe_add_driving_style_coaching(
+    coaching_messages,
+    completed_lap_num,
+    latest_car_status,
+    latest_car_damage,
+    latest_session_data,
+    latest_tyre_sets,
+):
+    if is_driving_style_coaching_suppressed(
+        latest_car_status,
+        latest_session_data,
+        latest_car_damage,
+    ):
+        return
+
+    candidates = [
+        get_tyre_driving_style_coaching_candidate(
+            latest_car_damage,
+            latest_tyre_sets,
+            latest_session_data,
+        ),
+        get_fuel_driving_style_coaching_candidate(
+            latest_car_status,
+            latest_session_data,
+        ),
+        get_ers_driving_style_coaching_candidate(
+            latest_car_status,
+            latest_session_data,
+        ),
+    ]
+
+    selected_candidate = select_best_driving_style_candidate(candidates)
+
+    if selected_candidate is None:
+        return
+
+    message = selected_candidate["message"]
+    context = message["context"]
+
+    if should_emit_coaching_message(
+        context,
+        completed_lap_num,
+        min_laps_between=selected_candidate["min_laps_between"],
+        min_seconds_between=selected_candidate["min_seconds_between"],
+    ):
+        coaching_messages.append(message)
+
 
 def generate_driver_coaching(
     performance_analysis,
@@ -2226,6 +2722,8 @@ def generate_driver_coaching(
     latest_session_history,
     latest_car_damage=None,
     latest_session_data=None,
+    latest_car_status=None,
+    latest_tyre_sets=None, 
 ):
     coaching_messages = []
 
@@ -2398,6 +2896,20 @@ def generate_driver_coaching(
                             "Focus on repeatability."
                         )
                     )
+
+    # v0.9.6D - Tyre / Fuel / ERS Driving Style Coaching
+    # This adds at most one extra driving-style message.
+    # It does not replace existing warnings or strategy advice.
+    maybe_add_driving_style_coaching(
+        coaching_messages,
+        completed_lap_num,
+        latest_car_status,
+        latest_car_damage,
+        latest_session_data,
+        latest_tyre_sets,
+    )
+
+    return sort_engineer_messages(coaching_messages)[:2]                
 
     return sort_engineer_messages(coaching_messages)[:2]
 

@@ -671,6 +671,8 @@ def display_live_telemetry(latest_telemetry,
         latest_session_history,
         latest_car_damage,
         latest_session_data,
+        latest_car_damage,
+        latest_tyre_sets,
     )
 
     print()
