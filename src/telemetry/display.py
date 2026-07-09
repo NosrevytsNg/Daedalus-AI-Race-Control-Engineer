@@ -666,13 +666,13 @@ def display_live_telemetry(latest_telemetry,
 #========================================================================================
 
     coaching_messages = generate_driver_coaching(
-        performance_analysis,
-        latest_lap_data,
-        latest_session_history,
-        latest_car_damage,
-        latest_session_data,
-        latest_car_damage,
-        latest_tyre_sets,
+        performance_analysis=performance_analysis,
+        latest_lap_data=latest_lap_data,
+        latest_session_history=latest_session_history,
+        latest_car_damage=latest_car_damage,
+        latest_session_data=latest_session_data,
+        latest_car_status=latest_car_status,
+        latest_tyre_sets=latest_tyre_sets,
     )
 
     print()

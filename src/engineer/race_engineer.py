@@ -2406,16 +2406,10 @@ def get_max_tyre_wear_for_style(latest_car_damage, latest_tyre_sets):
 
 def is_driving_style_coaching_suppressed(
     latest_car_status,
-    latest_session_data,
     latest_car_damage,
+    latest_session_data, 
 ):
-    """
-    Suppress driving-style coaching when the advice is not useful.
 
-    Safety Car/VSC and major damage already pause performance coaching.
-    Pit limiter means the car is in or near the pits, so driving-style advice
-    is not relevant at that moment.
-    """
     if is_safety_car_active(latest_session_data):
         return True
 
@@ -2678,8 +2672,8 @@ def maybe_add_driving_style_coaching(
 ):
     if is_driving_style_coaching_suppressed(
         latest_car_status,
-        latest_session_data,
         latest_car_damage,
+        latest_session_data,   
     ):
         return
 
@@ -2901,17 +2895,15 @@ def generate_driver_coaching(
     # This adds at most one extra driving-style message.
     # It does not replace existing warnings or strategy advice.
     maybe_add_driving_style_coaching(
-        coaching_messages,
-        completed_lap_num,
-        latest_car_status,
-        latest_car_damage,
-        latest_session_data,
-        latest_tyre_sets,
+        coaching_messages=coaching_messages,
+        completed_lap_num=completed_lap_num,
+        latest_car_status=latest_car_status,
+        latest_car_damage=latest_car_damage,
+        latest_session_data=latest_session_data,
+        latest_tyre_sets=latest_tyre_sets,
     )
 
     return sort_engineer_messages(coaching_messages)[:2]                
-
-    return sort_engineer_messages(coaching_messages)[:2]
 
 def should_emit_coaching_message(
     context,
